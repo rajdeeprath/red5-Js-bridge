@@ -25,15 +25,23 @@ import org.red5.server.api.IConnection;
 import org.red5.server.api.scope.IScope;
 //import org.slf4j.Logger;
 
+
+import org.slf4j.Logger;
+
+import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
+import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
+
 /**
  * Sample application that uses the client manager.
  * 
  * @author The Red5 Project (red5@osflash.org)
  */
-public class Application extends MultiThreadedApplicationAdapter {
+public class Application extends MultiThreadedApplicationAdapter implements IJSBridgeAware{
 
-	//private static Logger log = Red5LoggerFactory.getLogger(Application.class);
+	private static Logger log = Red5LoggerFactory.getLogger(Application.class);
 
+	private IJsBridge bridge;
+	
 	
 	@Override
 	public boolean appConnect(IConnection arg0, Object[] arg1) {
@@ -41,22 +49,44 @@ public class Application extends MultiThreadedApplicationAdapter {
 		return super.appConnect(arg0, arg1);
 	}
 
+	
+	
 	@Override
-	public void appDisconnect(IConnection arg0) {
-		// TODO Auto-generated method stub
+	public void appDisconnect(IConnection arg0) 
+	{
 		super.appDisconnect(arg0);
 	}
-
+	
+	
+	
 	@Override
-	public boolean appStart(IScope arg0) {
-		// TODO Auto-generated method stub
+	public boolean appStart(IScope arg0) 
+	{
 		return super.appStart(arg0);
 	}
 
+	
+	
 	@Override
-	public void appStop(IScope arg0) {
-		// TODO Auto-generated method stub
+	public void appStop(IScope arg0) 
+	{
 		super.appStop(arg0);
+	}
+
+	
+	
+	@Override
+	public void setRed5JSBridge(IJsBridge bridge) 
+	{
+		this.bridge = bridge;
+	}
+
+	
+	
+	@Override
+	public IJsBridge getRed5JSBridge() 
+	{
+		return bridge;
 	}
 	
 

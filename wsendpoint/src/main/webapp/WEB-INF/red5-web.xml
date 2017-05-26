@@ -41,9 +41,7 @@
         <!-- The ws scope listeners -->
         <property name="listeners">
             <list>
-                <bean id="chatListener" class="org.red5.demos.chat.WebSocketChatDataListener">
-                    <property name="router" ref="router" />
-                </bean>
+                <bean id="messageListener" class="com.flashvisions.server.red5.jsbridge.listeners.JsBridgeDataListener" />
             </list>
         </property>
     </bean>
