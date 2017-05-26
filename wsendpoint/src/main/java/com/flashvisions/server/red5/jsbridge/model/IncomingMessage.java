@@ -7,7 +7,7 @@ public class IncomingMessage extends Message {
 	public IncomingMessage()
 	{
 		super();
-		setType(MessageType.RMI);
+		setType(BridgeMessageType.RMI);
 	}
 	
 }

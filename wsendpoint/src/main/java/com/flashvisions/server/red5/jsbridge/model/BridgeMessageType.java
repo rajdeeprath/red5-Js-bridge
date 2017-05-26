@@ -1,6 +1,6 @@
 package com.flashvisions.server.red5.jsbridge.model;
 
-public enum MessageType {
+public enum BridgeMessageType {
 	
 	EVENT("event"),
 	RMI("rmi"),
@@ -8,7 +8,7 @@ public enum MessageType {
 	
 	private final String name;    
 	
-	private MessageType(String s) {
+	private BridgeMessageType(String s) {
         name = s;
     }
 	

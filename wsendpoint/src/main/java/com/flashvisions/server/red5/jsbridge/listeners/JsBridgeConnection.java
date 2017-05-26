@@ -1,14 +1,21 @@
-package com.flashvisions.server.red5.jsbridge.model;
+package com.flashvisions.server.red5.jsbridge.listeners;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
+import org.apache.mina.core.session.IoSession;
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.net.websocket.WebSocketConnection;
+import org.red5.net.websocket.model.MessageType;
+import org.slf4j.Logger;
 
 import com.flashvisions.server.red5.jsbridge.interfaces.IMessage;
 import com.flashvisions.server.red5.jsbridge.model.converter.MessageConverter;
 
 public class JsBridgeConnection {
+	
+	private static final Logger logger = Red5LoggerFactory.getLogger(JsBridgeConnection.class, "red5-js-bridge");
+
 	
 	public static String TAG = "JsBridgeConnection";
 	
@@ -97,5 +104,46 @@ public class JsBridgeConnection {
 	public void close() 
 	{
 		signalChannel.close();	
+	}
+	
+	
+	
+	public void ping()
+	{
+		Object signalChannel = getSignalChannel();
+		
+        if (signalChannel instanceof WebSocketConnection) 
+        {
+        	try
+        	{
+	        	IoSession ioSession = ((WebSocketConnection) signalChannel).getSession();
+	            if (ioSession.isConnected()) 
+	            {
+	            	long lastIo = ioSession.getLastWriteTime();
+	                long delta = System.currentTimeMillis() - lastIo;
+	             
+	                if (delta > 60000L) 
+	                {
+	                    close();
+	                } 
+	                else 
+	                {
+	                    ioSession.write(org.red5.net.websocket.model.Packet.build("PING!".getBytes(), MessageType.PING));
+	                    if(logger.isDebugEnabled())
+	                    {
+	                    	logger.info("Ping sent to {}", signalChannel);
+	                    }
+	                }
+	            }
+	            else 
+	            {
+	            	logger.warn("Cannot ping, not connected");
+	            }
+        	}
+        	catch (Exception e) 
+        	{
+        		logger.warn("Exception on ping to {}", signalChannel);
+            }
+        }
 	}
 }

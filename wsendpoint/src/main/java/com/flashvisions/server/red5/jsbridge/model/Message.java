@@ -11,7 +11,7 @@ public class Message implements IMessage {
 	
 	
 	// RMI or EVENT
-	MessageType type;
+	BridgeMessageType type;
 	
 	
 	// Data 
@@ -56,7 +56,7 @@ public class Message implements IMessage {
 	 * @see com.flashvisions.server.red5.jsbridge.model.IMessage#getType()
 	 */
 	@Override
-	public MessageType getType() {
+	public BridgeMessageType getType() {
 		return type;
 	}
 
@@ -65,7 +65,7 @@ public class Message implements IMessage {
 	 * @see com.flashvisions.server.red5.jsbridge.model.IMessage#setType(com.flashvisions.server.red5.jsbridge.model.MessageType)
 	 */
 	@Override
-	public void setType(MessageType type) {
+	public void setType(BridgeMessageType type) {
 		this.type = type;
 	}
 

@@ -1,6 +1,6 @@
 package com.flashvisions.server.red5.jsbridge.interfaces;
 
-import com.flashvisions.server.red5.jsbridge.model.MessageType;
+import com.flashvisions.server.red5.jsbridge.model.BridgeMessageType;
 
 public interface IMessage {
 
@@ -8,9 +8,9 @@ public interface IMessage {
 
 	public abstract void setId(String id);
 
-	public abstract MessageType getType();
+	public abstract BridgeMessageType getType();
 
-	public abstract void setType(MessageType type);
+	public abstract void setType(BridgeMessageType type);
 
 	public abstract Object getData();
 
