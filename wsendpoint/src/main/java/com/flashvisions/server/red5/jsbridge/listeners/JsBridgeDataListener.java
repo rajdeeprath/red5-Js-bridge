@@ -1,5 +1,6 @@
 package com.flashvisions.server.red5.jsbridge.listeners;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -22,42 +23,63 @@ import org.springframework.context.ApplicationContextAware;
 
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
+import com.flashvisions.server.red5.jsbridge.model.EventMessage;
+import com.flashvisions.server.red5.jsbridge.model.JsBridgeConnection;
+import com.flashvisions.server.red5.jsbridge.model.Message;
+import com.flashvisions.server.red5.jsbridge.model.MessageStatus;
+import com.flashvisions.server.red5.jsbridge.model.MessageType;
 
 public class JsBridgeDataListener extends WebSocketDataListener implements IJsBridge, InitializingBean, ApplicationContextAware {
 
 	private static final Logger logger = Red5LoggerFactory.getLogger(JsBridgeDataListener.class, "red5-js-bridge");
 	
-	private CopyOnWriteArrayList<WebSocketConnection> connections = new CopyOnWriteArrayList<WebSocketConnection>();
+	//private CopyOnWriteArrayList<WebSocketConnection> connections = new CopyOnWriteArrayList<WebSocketConnection>();
     
 	private ApplicationContext applicationContext;
 	
 	private IScope appScope;
 	
 	private MultiThreadedApplicationAdapter appAdapter;
+	
+	private ConnectionManager connManager;
 
 
     {
         setProtocol("jsbridge");
+    }
+    
+    
+    public JsBridgeDataListener()
+    {
+    	connManager = new ConnectionManager();
+    	connManager.initialize();
     }
 
 
 	
 	
 	@Override
-	public void onWSMessage(WSMessage message) {
+	public void onWSMessage(WSMessage message) 
+	{
 		// TODO Auto-generated method stub
 		
 	}
 
+	
+	
 	@Override
-	public void onWSConnect(WebSocketConnection conn) {
-		// TODO Auto-generated method stub
+	public void onWSConnect(WebSocketConnection conn) 
+	{
+		JsBridgeConnection bridgeConnection = ConnectionManager.getBridgeConnection(conn);
+		
+		// validate and add to connection manager list
 		
 	}
 
 	@Override
 	public void onWSDisconnect(WebSocketConnection conn) {
-		// TODO Auto-generated method stub
+		
+		// remove from connect manager list
 		
 	}
 
@@ -72,30 +94,40 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	
 	@Override
 	public void pushMessage(Object data) throws Exception {
-		// TODO Auto-generated method stub
+		
+		Message message = new Message();
+		message.setType(MessageType.PUSH_MESSAGE);
+		message.setStatus(MessageStatus.DATA);
+		message.setData(data);
+		connManager.sendToAll(message);
 	}
+	
+	
 	
 	
 	
 	@Override
 	public void pushMessage(IConnection conn, Object data) throws Exception {
-		// TODO Auto-generated method stub
-	}
-
-	
-	
-	@Override
-	public void broadcastEvent(String event, Object data) {
-		// TODO Auto-generated method stub
 		
+		Message message = new Message();
+		message.setType(MessageType.PUSH_MESSAGE);
+		message.setStatus(MessageStatus.DATA);
+		message.setData(data);
+		sendToIP(conn.getRemoteAddress(), message);
 	}
 
 	
 	
+	
+
 	@Override
-	public boolean isConnected() 
+	public void broadcastEvent(String event, Object data) 
 	{
-		return getTotalConnection() > 0;
+		Message message = new Message();
+		message.setType(MessageType.EVENT);
+		message.setStatus(MessageStatus.DATA);
+		message.setData(new EventMessage(event, data)); // some how pack =>  close as special event
+		connManager.sendToAll(message);
 	}
 
 	
@@ -104,7 +136,17 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	public void close(String reason) 
 	{
 		// notify closing to client
-		closeAllConnections();		
+		
+		Message message = new Message();
+		message.setType(MessageType.EVENT);
+		message.setStatus(MessageStatus.DATA);
+		message.setData(new EventMessage("closing", reason)); // some how pack =>  close as special event
+		connManager.sendToAll(message);
+		
+		
+		// close all connections
+		
+		connManager.closeAllConnections();		
 	}
 
 	
@@ -113,21 +155,25 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	public void close() 
 	{
 		// notify closing to client
-		closeAllConnections();
-	}
-
+		
+		Message message = new Message();
+		message.setType(MessageType.EVENT);
+		message.setStatus(MessageStatus.DATA);
+		message.setData(new EventMessage("closing", null)); // some how pack =>  close as special event
+		connManager.sendToAll(message);
+		
+		
+		// close all connections
+		
+		connManager.closeAllConnections();
+	}	
 	
 	
-	private void closeAllConnections()
+	
+	
+	private void sendToIP(String ip, Message message) 
 	{
-		Iterator<WebSocketConnection> iterator = connections.iterator(); 
-	    while (iterator.hasNext())
-	    {
-	    	WebSocketConnection conn = iterator.next();
-	    	if(conn != null && conn.isConnected()){
-	    		conn.close();
-	    	}
-	    }
+		connManager.sendToIP(ip, message);		
 	}
 	
 	
@@ -136,17 +182,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	@Override
 	public int getTotalConnection() 
 	{
-		int i=0;
-		Iterator<WebSocketConnection> iterator = connections.iterator(); 
-	    while (iterator.hasNext()){
-	    	
-	    	WebSocketConnection conn = iterator.next();
-	    	if(conn != null && conn.isConnected()){
-	    		i++;
-	    	}
-	    }
-	
-		return i;
+		return connManager.getTotalConnection();
 	}
 
 	
