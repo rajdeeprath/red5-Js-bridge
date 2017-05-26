@@ -1,14 +1,13 @@
 package com.flashvisions.server.red5.jsbridge.listeners;
 
-import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.red5.net.websocket.WebSocketConnection;
 
+import com.flashvisions.server.red5.jsbridge.interfaces.IMessage;
 import com.flashvisions.server.red5.jsbridge.model.JsBridgeConnection;
-import com.flashvisions.server.red5.jsbridge.model.Message;
-import com.flashvisions.server.red5.jsbridge.model.converter.MessageConverter;
 
 public class ConnectionManager {
 	
@@ -26,11 +25,18 @@ public class ConnectionManager {
 	}
 	
 	
-	public static JsBridgeConnection getBridgeConnection(WebSocketConnection conn)
+	public static JsBridgeConnection createBridgeConnectionObject(WebSocketConnection conn)
 	{
 		JsBridgeConnection connection = new JsBridgeConnection();
-		connection.setInternalConnection(conn);
+		connection.setSignalChannel(conn);
+		connection.setHost(conn.getHost());
 		
+		InetSocketAddress addr = (InetSocketAddress) conn.getSession().getRemoteAddress();
+		connection.setRemoteAddress(addr.getAddress().getHostAddress());
+		connection.setRemotePort(addr.getPort());
+		
+		conn.getSession().setAttribute(JsBridgeConnection.TAG, connection);
+
 		return connection;
 	}
 	
@@ -42,8 +48,7 @@ public class ConnectionManager {
 		Iterator<JsBridgeConnection> iterator = connections.iterator(); 
 	    while (iterator.hasNext())
 	    {
-	    	JsBridgeConnection wrapper = iterator.next();
-	    	WebSocketConnection conn = wrapper.getInternalConnection();
+	    	JsBridgeConnection conn = iterator.next();
 	    	if(conn != null && conn.isConnected()){
 	    		conn.close();
 	    	}
@@ -59,7 +64,7 @@ public class ConnectionManager {
 		Iterator<JsBridgeConnection> iterator = connections.iterator(); 
 	    while (iterator.hasNext()){
 	    	JsBridgeConnection wrapper = iterator.next();
-			WebSocketConnection conn = wrapper.getInternalConnection();
+			WebSocketConnection conn = wrapper.getSignalChannel();
 	    	if(conn != null && conn.isConnected()){
 	    		i++;
 	    	}
@@ -71,20 +76,20 @@ public class ConnectionManager {
 	
 	
 	
-	public void sendToAll(Message message)
+	public void sendToAll(IMessage message)
 	{
-		MessageConverter converter = new MessageConverter();
-		
 		Iterator<JsBridgeConnection> iterator = connections.iterator();
 		while (iterator.hasNext())
 	    {
-	    	JsBridgeConnection wrapper = iterator.next();
-			WebSocketConnection conn = wrapper.getInternalConnection();
-	    	if(conn != null && conn.isConnected()){
-	    		try {
-					conn.send(converter.toJson(message));
-				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
+	    	JsBridgeConnection conn = iterator.next();
+	    	if(conn != null && conn.isConnected())
+	    	{
+	    		try 
+	    		{
+					conn.send(message);
+				} 
+	    		catch (Exception e) 
+	    		{
 					e.printStackTrace();
 				}
 	    	}
@@ -95,20 +100,23 @@ public class ConnectionManager {
 	
 	
 	
-	public void sendToIP(String ip, Message message) 
+	public void sendToIP(String ip, IMessage message) 
 	{
-		MessageConverter converter = new MessageConverter();
-		
 		Iterator<JsBridgeConnection> iterator = connections.iterator();
 		while (iterator.hasNext())
 	    {
-	    	JsBridgeConnection wrapper = iterator.next();
-			WebSocketConnection conn = wrapper.getInternalConnection();
-	    	if(conn != null && conn.isConnected()){
-	    		try {
-					conn.send(converter.toJson(message));
-				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
+	    	JsBridgeConnection conn = iterator.next();
+	    	if(conn != null && conn.isConnected())
+	    	{
+	    		try 
+	    		{
+	    			if(conn.getRemoteAddress().equals(ip))
+	    			{
+	    				conn.send(message);
+	    			}
+				} 
+	    		catch (Exception e) 
+	    		{
 					e.printStackTrace();
 				}
 	    	}

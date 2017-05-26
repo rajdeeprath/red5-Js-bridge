@@ -4,7 +4,7 @@ public enum MessageType {
 	
 	EVENT("event"),
 	RMI("rmi"),
-	PUSH_MESSAGE("push_message");
+	PUSH("push_message");
 	
 	private final String name;    
 	

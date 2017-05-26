@@ -25,7 +25,7 @@ import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
 import com.flashvisions.server.red5.jsbridge.model.EventMessage;
 import com.flashvisions.server.red5.jsbridge.model.JsBridgeConnection;
-import com.flashvisions.server.red5.jsbridge.model.Message;
+import com.flashvisions.server.red5.jsbridge.model.OutGoingMessage;
 import com.flashvisions.server.red5.jsbridge.model.MessageStatus;
 import com.flashvisions.server.red5.jsbridge.model.MessageType;
 
@@ -70,7 +70,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	@Override
 	public void onWSConnect(WebSocketConnection conn) 
 	{
-		JsBridgeConnection bridgeConnection = ConnectionManager.getBridgeConnection(conn);
+		JsBridgeConnection bridgeConnection = ConnectionManager.createBridgeConnectionObject(conn);
 		
 		// validate and add to connection manager list
 		
@@ -95,8 +95,8 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	@Override
 	public void pushMessage(Object data) throws Exception {
 		
-		Message message = new Message();
-		message.setType(MessageType.PUSH_MESSAGE);
+		OutGoingMessage message = new OutGoingMessage();
+		message.setType(MessageType.PUSH);
 		message.setStatus(MessageStatus.DATA);
 		message.setData(data);
 		connManager.sendToAll(message);
@@ -109,8 +109,8 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	@Override
 	public void pushMessage(IConnection conn, Object data) throws Exception {
 		
-		Message message = new Message();
-		message.setType(MessageType.PUSH_MESSAGE);
+		OutGoingMessage message = new OutGoingMessage();
+		message.setType(MessageType.PUSH);
 		message.setStatus(MessageStatus.DATA);
 		message.setData(data);
 		sendToIP(conn.getRemoteAddress(), message);
@@ -123,7 +123,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	@Override
 	public void broadcastEvent(String event, Object data) 
 	{
-		Message message = new Message();
+		OutGoingMessage message = new OutGoingMessage();
 		message.setType(MessageType.EVENT);
 		message.setStatus(MessageStatus.DATA);
 		message.setData(new EventMessage(event, data)); // some how pack =>  close as special event
@@ -137,10 +137,10 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	{
 		// notify closing to client
 		
-		Message message = new Message();
+		OutGoingMessage message = new OutGoingMessage();
 		message.setType(MessageType.EVENT);
 		message.setStatus(MessageStatus.DATA);
-		message.setData(new EventMessage("closing", reason)); // some how pack =>  close as special event
+		message.setData(new EventMessage("Closing", reason)); // some how pack =>  close as special event
 		connManager.sendToAll(message);
 		
 		
@@ -156,10 +156,10 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	{
 		// notify closing to client
 		
-		Message message = new Message();
+		OutGoingMessage message = new OutGoingMessage();
 		message.setType(MessageType.EVENT);
 		message.setStatus(MessageStatus.DATA);
-		message.setData(new EventMessage("closing", null)); // some how pack =>  close as special event
+		message.setData(new EventMessage("Closing", null)); // some how pack =>  close as special event
 		connManager.sendToAll(message);
 		
 		
@@ -171,7 +171,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	
 	
 	
-	private void sendToIP(String ip, Message message) 
+	private void sendToIP(String ip, OutGoingMessage message) 
 	{
 		connManager.sendToIP(ip, message);		
 	}
