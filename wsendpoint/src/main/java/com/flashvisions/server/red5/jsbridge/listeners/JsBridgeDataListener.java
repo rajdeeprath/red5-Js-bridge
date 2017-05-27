@@ -78,12 +78,13 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
         }
 		else if (message.getMessageType() == MessageType.PONG) 
 		{
+			connection.pingAcknowledged();
             return;
         }
 		else if (message.getMessageType() != MessageType.CLOSE) 
 		{
 			
-			if (message.getMessageType() != MessageType.TEXT)
+			if (message.getMessageType() == MessageType.TEXT)
 			{
 				resolveWebsocketMessage(message);
 			}
@@ -413,7 +414,6 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			
 			if(json.has("type")) // proper message ?
 			{
-				path = json.get("path").getAsString();
 				RMIMessage request = (RMIMessage) messageConverter.fromJson(json);
 				return request;
 			}

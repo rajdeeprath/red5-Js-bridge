@@ -108,6 +108,14 @@ public class JsBridgeConnection {
 	
 	
 	
+	
+	public void pingAcknowledged()
+	{
+		
+	}
+	
+	
+	
 	public void ping()
 	{
 		Object signalChannel = getSignalChannel();

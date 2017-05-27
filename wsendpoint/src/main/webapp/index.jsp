@@ -13,9 +13,25 @@ function testWebSocket()
 }
 
 
+
+function test()
+{
+  var obj = {};
+  obj.id = "1234";
+  obj.timestamp = new Date().getTime();
+  obj.type = "RMI";
+  obj.method = "consoleLog";
+  obj.method = "add";
+  obj.data = ["my message"];
+  
+  websocket.send(JSON.stringify(obj)); 
+}
+
+
 function onOpen(evt)
 {
-  console.log("onOpen");
+	  console.log("onOpen");
+	  test();
 }
 
 function onClose(evt)
