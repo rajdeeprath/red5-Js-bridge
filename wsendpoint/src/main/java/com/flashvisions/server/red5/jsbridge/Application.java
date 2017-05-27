@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
+import com.flashvisions.server.red5.jsbridge.model.annotations.Invocable;
 
 /**
  * Sample application that uses the client manager.
@@ -90,5 +91,26 @@ public class Application extends MultiThreadedApplicationAdapter implements IJSB
 	}
 	
 
+	
+	@Invocable
+	public void consoleLog(String message)
+	{
+		log.info(message);
+	}
+	
+	
+	
+	@Invocable
+	public int add(int a, int b)
+	{
+		return a + b;
+	}
+	
+	
+	@Invocable
+	public String greet(String title)
+	{
+		return "Hello, " + title;
+	}
 
 }
