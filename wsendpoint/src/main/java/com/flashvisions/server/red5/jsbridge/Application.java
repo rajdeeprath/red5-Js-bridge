@@ -20,13 +20,20 @@ package com.flashvisions.server.red5.jsbridge;
  */
 
 import org.red5.logging.Red5LoggerFactory;
+import org.red5.net.websocket.WebSocketPlugin;
+import org.red5.net.websocket.WebSocketScope;
+import org.red5.net.websocket.WebSocketScopeManager;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.scope.IScope;
 //import org.slf4j.Logger;
 
 
+import org.red5.server.plugin.PluginRegistry;
 import org.slf4j.Logger;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
@@ -37,41 +44,44 @@ import com.flashvisions.server.red5.jsbridge.model.annotations.Invocable;
  * 
  * @author The Red5 Project (red5@osflash.org)
  */
-public class Application extends MultiThreadedApplicationAdapter implements IJSBridgeAware{
+public class Application extends MultiThreadedApplicationAdapter implements IJSBridgeAware, ApplicationContextAware {
 
 	private static Logger log = Red5LoggerFactory.getLogger(Application.class);
 
 	private IJsBridge bridge;
 	
-	
-	@Override
-	public boolean appConnect(IConnection arg0, Object[] arg1) {
-		// TODO Auto-generated method stub
-		return super.appConnect(arg0, arg1);
-	}
-
+	private ApplicationContext applicationContext;
 	
 	
 	@Override
-	public void appDisconnect(IConnection arg0) 
-	{
-		super.appDisconnect(arg0);
-	}
-	
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 	
 	
 	@Override
 	public boolean appStart(IScope arg0) 
 	{
-		return super.appStart(arg0);
+		WebSocketPlugin wsPlugin = (WebSocketPlugin) PluginRegistry.getPlugin("WebSocketPlugin");
+        wsPlugin.setApplication(this);
+        WebSocketScopeManager manager = wsPlugin.getManager(arg0);
+        WebSocketScope defaultWebSocketScope = (WebSocketScope) applicationContext.getBean("webSocketScopeDefault");
+        manager.addWebSocketScope(defaultWebSocketScope);
+        
+        return super.appStart(arg0);
 	}
 
 	
 	
 	@Override
 	public void appStop(IScope arg0) 
-	{
-		super.appStop(arg0);
+	{;
+        // remove our app
+        WebSocketScopeManager manager = ((WebSocketPlugin) PluginRegistry.getPlugin("WebSocketPlugin")).getManager(arg0);
+        manager.removeApplication(arg0);
+        manager.stop();
+        
+        super.appStop(arg0);
 	}
 
 	
@@ -113,4 +123,29 @@ public class Application extends MultiThreadedApplicationAdapter implements IJSB
 		return "Hello, " + title;
 	}
 
+
+	@Override
+	public boolean appConnect(IConnection conn, Object[] params) {
+		// TODO Auto-generated method stub
+		
+		ConnectionInfo info = new ConnectionInfo();
+		info.setId(conn.getSessionId());
+		info.setRemoteAddress(conn.getRemoteAddress());
+		info.setPath(conn.getPath());
+		info.setType(conn.getProtocol());
+		
+		bridge.broadcastEvent("appConnect", info);
+		
+		return super.appConnect(conn, params);
+	}
+
+
+	@Override
+	public void appDisconnect(IConnection conn) {
+		// TODO Auto-generated method stub
+		super.appDisconnect(conn);
+	}
+
+	
+	
 }

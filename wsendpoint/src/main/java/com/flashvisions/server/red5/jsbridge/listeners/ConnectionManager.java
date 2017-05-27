@@ -199,7 +199,7 @@ public class ConnectionManager {
 			JsBridgeConnection conn = iterator.next();
 	    	if(conn != null)
 	    	{
-	    		iterator.remove();
+	    		connections.remove(conn);
 	    		removed = true;
 	    		break;
 	    	}
@@ -259,7 +259,7 @@ public class ConnectionManager {
 					else
 					{
 						logger.warn("Removing unresponsive connection {}",  conn);
-						iterator.remove();
+						connections.remove(conn);
 					}
 				}
 				catch(Exception e)

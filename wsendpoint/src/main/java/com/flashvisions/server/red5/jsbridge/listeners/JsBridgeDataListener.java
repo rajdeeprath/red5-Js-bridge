@@ -113,7 +113,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	public void onWSDisconnect(WebSocketConnection conn) 
 	{
 		JsBridgeConnection bridgeConnection = ConnectionManager.getConnection(conn);
-		connManager.addConnection(bridgeConnection);	
+		connManager.removeConnection(bridgeConnection);	
 	}
 
 	
