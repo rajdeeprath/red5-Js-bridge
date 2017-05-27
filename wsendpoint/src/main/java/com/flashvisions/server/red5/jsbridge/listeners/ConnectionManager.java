@@ -126,6 +126,35 @@ public class ConnectionManager {
 	    			if(conn.getRemoteAddress().equals(ip))
 	    			{
 	    				conn.send(message);
+	    				break;
+	    			}
+				} 
+	    		catch (Exception e) 
+	    		{
+					e.printStackTrace();
+				}
+	    	}
+	    }		
+	}
+	
+	
+	
+	
+	
+	public void sendToConnection(WebSocketConnection target, IMessage message) 
+	{
+		Iterator<JsBridgeConnection> iterator = connections.iterator();
+		while (iterator.hasNext())
+	    {
+	    	JsBridgeConnection conn = iterator.next();
+	    	if(conn != null && conn.isConnected())
+	    	{
+	    		try 
+	    		{
+	    			if(conn.getSignalChannel() == target)
+	    			{
+	    				conn.send(message);
+	    				break;
 	    			}
 				} 
 	    		catch (Exception e) 

@@ -1,10 +1,11 @@
 package com.flashvisions.server.red5.jsbridge.listeners;
 
-import java.io.UnsupportedEncodingException;
-import java.sql.Connection;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.concurrent.CopyOnWriteArrayList;
-
+import java.util.List;
+import org.apache.commons.lang3.ArrayUtils;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.listener.WebSocketDataListener;
@@ -22,13 +23,18 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-
+import com.flashvisions.server.red5.jsbridge.exceptions.MessageFormatException;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
 import com.flashvisions.server.red5.jsbridge.model.EventMessage;
+import com.flashvisions.server.red5.jsbridge.model.RMIMessage;
 import com.flashvisions.server.red5.jsbridge.model.OutGoingMessage;
 import com.flashvisions.server.red5.jsbridge.model.MessageStatus;
 import com.flashvisions.server.red5.jsbridge.model.BridgeMessageType;
+import com.flashvisions.server.red5.jsbridge.model.converter.MessageConverter;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class JsBridgeDataListener extends WebSocketDataListener implements IJsBridge, InitializingBean, ApplicationContextAware {
 
@@ -39,6 +45,8 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	private IScope appScope;
 	
 	private MultiThreadedApplicationAdapter appAdapter;
+	
+	private List<Method> invocableMethods;
 	
 	private ConnectionManager connManager;
 
@@ -74,11 +82,11 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
         }
 		else if (message.getMessageType() != MessageType.CLOSE) 
 		{
-			// receive RMI requst here
 			
-			// verify message
-			
-			// invoke application method with reflection
+			if (message.getMessageType() != MessageType.TEXT)
+			{
+				resolveWebsocketMessage(message);
+			}
 		}
 		else
 		{
@@ -88,8 +96,10 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 				
 	}
 
-	
-	
+
+
+
+
 	@Override
 	public void onWSConnect(WebSocketConnection conn) 
 	{
@@ -247,10 +257,9 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 		 }
 	}
 
-	
-	
-	
-	
+
+
+
 	private void setBridgeOnApplication() 
 	{
 		if(appAdapter != null && appAdapter instanceof IJSBridgeAware) 
@@ -262,4 +271,160 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 
 
 
+	private void resolveWebsocketMessage(WSMessage message) 
+	{
+		RMIMessage request = null;
+		OutGoingMessage response = null;
+		Exception exception = null;
+		
+		try 
+		{
+			request = getMessageFromPayload(message);
+			
+			ArrayList<?> arguments = (ArrayList<?>) request.getData();
+			Object instance = appAdapter;
+			
+			// needs proper rectification
+			String methodName = request.getMethod();
+			Method method = getInvocableMethod(methodName, arguments);
+			Object[] params = ArrayUtils.addAll(new Object[]{}, normalize(arguments, method));
+			
+			
+			
+			if(method.getReturnType() == void.class || method.getReturnType() == Void.TYPE)
+			{
+				method.invoke(instance, params);
+				
+				response = new OutGoingMessage();
+				response.setId(request.getId());
+				response.setType(request.getType());
+				response.setStatus(MessageStatus.DATA);
+				response.setData(null);
+			}
+			else
+			{
+				Object result = method.invoke(instance, params);
+				JsBridgeConnection conn = ConnectionManager.getConnection(message.getConnection());
+				
+				response = new OutGoingMessage();
+				response.setId(request.getId());
+				response.setType(request.getType());
+				response.setStatus(MessageStatus.DATA);
+				response.setData(result);
+			}
+			
+			connManager.sendToConnection(message.getConnection(), response);
+			
+		}
+		catch (IllegalAccessException e) 
+		{
+			exception = e;
+			logger.error("Error " + e.getMessage());
+		} 
+		//catch (InvocationTargetException | NoSuchMethodException e)
+		catch (InvocationTargetException e)
+		{
+			exception = e;
+			logger.error("Error " + e.getMessage());
+		}
+		catch (MessageFormatException e)
+		{
+			exception = e;
+			logger.error("Error " + e.getMessage());
+		}
+		catch (Exception e) 
+		{
+			exception = e;
+			logger.error("Error " + e.getMessage());
+		}
+		finally
+		{
+			if(exception != null)
+			{
+				response = new OutGoingMessage();
+				response.setId(request.getId());
+				response.setType(request.getType());
+				response.setStatus(MessageStatus.ERROR);
+				response.setData(exception.getMessage());
+				
+				connManager.sendToConnection(message.getConnection(), response);
+
+			}
+		}
+		
+	}
+	
+	
+	
+	
+	
+	private Method getInvocableMethod(String targetMethod, ArrayList<?> arguments) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+	private Object[] normalize(ArrayList<?> parameters, Method method)
+	{		
+		Class<?>[] expectedParamTypes = method.getParameterTypes();
+		int paramCount = expectedParamTypes.length;
+		
+		// substitute nulls
+		ArrayList<Object> sanitizedParameters = new ArrayList<Object>();
+		Iterator<?> it = parameters.iterator();
+		while(it.hasNext()){
+			Object param = it.next();
+			if(param == null || param == "null" || String.valueOf(param).equals(null) || String.valueOf(param).equalsIgnoreCase("null"))
+			sanitizedParameters.add(null);
+			else
+			sanitizedParameters.add(param);
+		}
+		
+		// insufficient params - excluding Responder ?
+		if(sanitizedParameters.size() < paramCount - 1) {
+			for(int i=0;i<(paramCount - sanitizedParameters.size());i++) {
+				sanitizedParameters.add(null);
+			}
+		}
+		
+		return sanitizedParameters.toArray();
+	}
+	
+	
+	
+	
+	
+	private RMIMessage getMessageFromPayload(WSMessage message) throws MessageFormatException
+	{
+		MessageConverter messageConverter;
+		String path = null;
+		
+		try
+		{
+			JsonParser p =new JsonParser();
+			String msgAsString = message.getMessageAsString();
+			
+			JsonElement msg = p.parse(msgAsString);
+			JsonObject json = msg.getAsJsonObject();
+			
+			messageConverter = new MessageConverter();
+			
+			if(json.has("type")) // proper message ?
+			{
+				path = json.get("path").getAsString();
+				RMIMessage request = (RMIMessage) messageConverter.fromJson(json);
+				return request;
+			}
+			else
+			{
+				throw new MessageFormatException("Unexpected data format. Missing fields detected in" + json.toString());
+			}
+		}
+		catch(Exception me)
+		{
+			throw new MessageFormatException("Invalid message format.Cause " + me.getMessage());
+		}
+	}
 }

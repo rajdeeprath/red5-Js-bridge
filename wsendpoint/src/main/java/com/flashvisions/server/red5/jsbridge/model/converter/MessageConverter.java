@@ -4,8 +4,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.flashvisions.server.red5.jsbridge.interfaces.IMessage;
-import com.flashvisions.server.red5.jsbridge.model.OutGoingMessage;
+import com.flashvisions.server.red5.jsbridge.model.RMIMessage;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 public class MessageConverter {
 	
@@ -27,6 +28,13 @@ public class MessageConverter {
 		}
 		
 		return gson.toJson(message);
+	}
+	
+	
+	
+	public IMessage fromJson(JsonObject json)
+	{
+		return gson.fromJson(json.toString(), RMIMessage.class);
 	}
 
 }
