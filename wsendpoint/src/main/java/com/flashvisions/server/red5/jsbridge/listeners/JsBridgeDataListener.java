@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.beanutils.MethodUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.listener.WebSocketDataListener;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import com.flashvisions.server.red5.jsbridge.Application;
 import com.flashvisions.server.red5.jsbridge.exceptions.MessageFormatException;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
@@ -33,6 +35,7 @@ import com.flashvisions.server.red5.jsbridge.model.RMIMessage;
 import com.flashvisions.server.red5.jsbridge.model.OutGoingMessage;
 import com.flashvisions.server.red5.jsbridge.model.MessageStatus;
 import com.flashvisions.server.red5.jsbridge.model.BridgeMessageType;
+import com.flashvisions.server.red5.jsbridge.model.annotations.Invocable;
 import com.flashvisions.server.red5.jsbridge.model.converter.MessageConverter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -287,10 +290,26 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			
 			Object instance = appAdapter;
 			
-			String methodName = request.getMethod();
-			Object[] arguments = sanitize((ArrayList<?>) request.getData());
 			
-			Object result = MethodUtils.invokeMethod(instance, methodName, arguments);
+			String methodName = request.getMethod();
+			Object[] args = sanitize((ArrayList<?>) request.getData());
+			
+			int arguments = args.length;
+			Class[] parameterTypes = new Class[arguments];
+			    for (int i = 0; i < arguments; i++) {
+			    parameterTypes[i] = args[i].getClass();
+			}
+			
+			Method method = MethodUtils.getMatchingAccessibleMethod(appAdapter.getClass(), methodName, parameterTypes);
+			
+			if(method == null) {
+				throw new NoSuchMethodException("No such invocable method '" + methodName + "' found in Application Adapter");
+			}
+			else if(!method.isAnnotationPresent(Invocable.class)){
+				throw new SecurityException("Method found is not invocable");
+			}
+			
+			Object result = method.invoke(appAdapter, args);
 			
 			response = new OutGoingMessage();
 			response.setId(request.getId());
