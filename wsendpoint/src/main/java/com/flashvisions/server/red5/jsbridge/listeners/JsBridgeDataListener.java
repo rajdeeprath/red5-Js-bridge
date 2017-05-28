@@ -287,15 +287,14 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			request = getMessageFromPayload(message);
 			
 			Object instance = appAdapter;
-			Object[] arguments = sanitize((ArrayList<?>) request.getData());
 			
 			String methodName = request.getMethod();
+			Object[] arguments = sanitize((ArrayList<?>) request.getData());
 			Method method = getInvocableMethod(methodName, arguments);
-			Object[] params = ArrayUtils.addAll(new Object[]{}, arguments);
 			
 			if(method.getReturnType() == void.class || method.getReturnType() == Void.TYPE)
 			{
-				method.invoke(instance, params);
+				method.invoke(instance, arguments);
 				
 				response = new OutGoingMessage();
 				response.setId(request.getId());
@@ -305,7 +304,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			}
 			else
 			{
-				Object result = method.invoke(instance, params);
+				Object result = method.invoke(instance, arguments);
 				JsBridgeConnection conn = ConnectionManager.getConnection(message.getConnection());
 				
 				response = new OutGoingMessage();
@@ -373,7 +372,15 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 		ArrayList<Object> sanitizedParameters = new ArrayList<Object>();
 		
 		for(Object argument : arguments)
-		{
+		{			
+			
+			// null check
+			if(argument == null || String.valueOf(argument) == null || String.valueOf(argument).equalsIgnoreCase("undefined") || String.valueOf(argument).equalsIgnoreCase(null))
+			{
+				sanitizedParameters.add(null);
+				continue;
+			}
+			
 			
 			String klassName = argument.getClass().getName();
 			
