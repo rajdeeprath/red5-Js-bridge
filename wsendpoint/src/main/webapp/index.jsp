@@ -22,7 +22,10 @@ function test()
   obj.type = "RMI";
   obj.method = "consoleLog";
   obj.method = "add";
-  obj.data = ["my message"];
+  
+  var data = {};
+  
+  obj.data = [{value:"my message", type: "String"}, {value:1, type: "Number"}, {value:2.023, type: "Number"}, {value:true, type: "Boolean"}, {value:null, type: "Null"}];
   
   websocket.send(JSON.stringify(obj)); 
 }

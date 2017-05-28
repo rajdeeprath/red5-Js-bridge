@@ -2,9 +2,11 @@ package com.flashvisions.server.red5.jsbridge.listeners;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.net.websocket.WebSocketConnection;
@@ -23,6 +25,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+
 import com.flashvisions.server.red5.jsbridge.exceptions.MessageFormatException;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
@@ -35,6 +38,7 @@ import com.flashvisions.server.red5.jsbridge.model.converter.MessageConverter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.internal.LinkedTreeMap;
 
 public class JsBridgeDataListener extends WebSocketDataListener implements IJsBridge, InitializingBean, ApplicationContextAware {
 
@@ -282,15 +286,12 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 		{
 			request = getMessageFromPayload(message);
 			
-			ArrayList<?> arguments = (ArrayList<?>) request.getData();
 			Object instance = appAdapter;
+			Object[] arguments = sanitize((ArrayList<?>) request.getData());
 			
-			// needs proper rectification
 			String methodName = request.getMethod();
 			Method method = getInvocableMethod(methodName, arguments);
-			Object[] params = ArrayUtils.addAll(new Object[]{}, normalize(arguments, method));
-			
-			
+			Object[] params = ArrayUtils.addAll(new Object[]{}, arguments);
 			
 			if(method.getReturnType() == void.class || method.getReturnType() == Void.TYPE)
 			{
@@ -354,39 +355,104 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 		}
 		
 	}
-	
-	
-	
-	
-	
-	private Method getInvocableMethod(String targetMethod, ArrayList<?> arguments) {
+
+
+
+
+	private Method getInvocableMethod(String targetMethod, Object[] arguments) {
 		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
 
 
-
-	private Object[] normalize(ArrayList<?> parameters, Method method)
+	private Object[] sanitize(ArrayList<?> arguments)
 	{		
-		Class<?>[] expectedParamTypes = method.getParameterTypes();
-		int paramCount = expectedParamTypes.length;
-		
 		// substitute nulls
 		ArrayList<Object> sanitizedParameters = new ArrayList<Object>();
-		Iterator<?> it = parameters.iterator();
-		while(it.hasNext()){
-			Object param = it.next();
-			if(param == null || param == "null" || String.valueOf(param).equals(null) || String.valueOf(param).equalsIgnoreCase("null"))
-			sanitizedParameters.add(null);
-			else
-			sanitizedParameters.add(param);
-		}
 		
-		// insufficient params - excluding Responder ?
-		if(sanitizedParameters.size() < paramCount - 1) {
-			for(int i=0;i<(paramCount - sanitizedParameters.size());i++) {
-				sanitizedParameters.add(null);
+		for(Object argument : arguments)
+		{
+			
+			String klassName = argument.getClass().getName();
+			
+			if(klassName.equals("LinkedTreeMap"))
+			{
+				// find more info
+				LinkedTreeMap<?, String> map = (LinkedTreeMap<?, String>) argument;
+				Object data = map.get("value");
+				String type = map.get("type");
+				
+				
+				if(type.equals("String"))
+				{
+					String param = String.valueOf(data);
+					sanitizedParameters.add(param);
+				}
+				else if(type.equals("Boolean"))
+				{
+					Boolean param = Boolean.valueOf(String.valueOf(data));;
+					sanitizedParameters.add(param);
+				}
+				else if(type.equals("Number"))
+				{
+					// guess what it is
+					sanitizedParameters.add(smartRecognizeNumeric(argument));
+				}
+				else if(klassName.equals("Integer"))
+				{
+					Integer param = Integer.parseInt(String.valueOf(data));
+					sanitizedParameters.add(param);
+				}
+				else if(klassName.equals("Long"))
+				{
+					Long param = Long.parseLong(String.valueOf(data));
+					sanitizedParameters.add(param);
+				}
+				else if(klassName.equals("Float"))
+				{
+					Float param = Float.parseFloat(String.valueOf(data));
+					sanitizedParameters.add(param);
+				}
+				else if(klassName.equals("Double"))
+				{
+					Double param = Double.parseDouble(String.valueOf(data));
+					sanitizedParameters.add(param);
+				}
+				else
+				{
+					throw new InvalidParameterException("Unrecognized parameter format");
+				}
+			}
+			else if(klassName.equals("String"))
+			{
+				sanitizedParameters.add(String.valueOf(argument));
+			}
+			else if(klassName.equals("Boolean"))
+			{
+				sanitizedParameters.add(Boolean.valueOf(String.valueOf(argument)));
+			}
+			else if(klassName.equals("Number"))
+			{
+				// guess what it is
+				sanitizedParameters.add(smartRecognizeNumeric(argument));
+			}
+			else if(klassName.equals("Float"))
+			{
+				sanitizedParameters.add(Float.parseFloat(String.valueOf(argument)));
+			}
+			else if(klassName.equals("Double"))
+			{
+				sanitizedParameters.add(Double.parseDouble(String.valueOf(argument)));
+			}
+			else if(klassName.equals("Integer"))
+			{
+				sanitizedParameters.add(Integer.parseInt(String.valueOf(argument)));
+			}
+			else if(klassName.equals("Long"))
+			{
+				sanitizedParameters.add(Long.parseLong(String.valueOf(argument)));
 			}
 		}
 		
@@ -397,6 +463,65 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	
 	
 	
+	private Object smartRecognizeNumeric(Object argument) 
+	{
+		String parameterString = String.valueOf(argument);
+		
+		if(parameterString.contains("."))
+		{
+			try
+			{
+				Float  param = Float.parseFloat(parameterString);
+				
+				if(String.valueOf(param).length() != parameterString.length())
+				throw new Exception("Number is not fit to be called a Float");
+				
+				return param;
+			}
+			catch(Exception fe)
+			{
+				try
+				{
+					Double param = Double.parseDouble(parameterString);
+					return param;
+				}
+				catch(Exception le)
+				{
+					throw new IllegalArgumentException();
+				}
+			}
+		}
+		else
+		{
+			try
+			{
+				Integer  param = Integer.parseInt(parameterString);
+				
+				if(String.valueOf(param).length() != parameterString.length())
+				throw new Exception("Number is not fit to be called an Integer");
+					
+				
+				return param;
+			}
+			catch(Exception ie)
+			{
+				try
+				{
+					Long param = Long.parseLong(parameterString);
+					return param;
+				}
+				catch(Exception le)
+				{
+					throw new IllegalArgumentException();
+				}
+				
+			}
+		}
+	}
+
+
+
+
 	private RMIMessage getMessageFromPayload(WSMessage message) throws MessageFormatException
 	{
 		MessageConverter messageConverter;
