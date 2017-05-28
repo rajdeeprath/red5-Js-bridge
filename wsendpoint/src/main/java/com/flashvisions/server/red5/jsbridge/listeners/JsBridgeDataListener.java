@@ -4,10 +4,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.beanutils.MethodUtils;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.listener.WebSocketDataListener;
@@ -290,40 +289,23 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			
 			String methodName = request.getMethod();
 			Object[] arguments = sanitize((ArrayList<?>) request.getData());
-			Method method = getInvocableMethod(methodName, arguments);
 			
-			if(method.getReturnType() == void.class || method.getReturnType() == Void.TYPE)
-			{
-				method.invoke(instance, arguments);
-				
-				response = new OutGoingMessage();
-				response.setId(request.getId());
-				response.setType(request.getType());
-				response.setStatus(MessageStatus.DATA);
-				response.setData(null);
-			}
-			else
-			{
-				Object result = method.invoke(instance, arguments);
-				JsBridgeConnection conn = ConnectionManager.getConnection(message.getConnection());
-				
-				response = new OutGoingMessage();
-				response.setId(request.getId());
-				response.setType(request.getType());
-				response.setStatus(MessageStatus.DATA);
-				response.setData(result);
-			}
+			Object result = MethodUtils.invokeMethod(instance, methodName, arguments);
+			
+			response = new OutGoingMessage();
+			response.setId(request.getId());
+			response.setType(request.getType());
+			response.setStatus(MessageStatus.DATA);
+			response.setData(result);
 			
 			connManager.sendToConnection(message.getConnection(), response);
-			
 		}
 		catch (IllegalAccessException e) 
 		{
 			exception = e;
 			logger.error("Error " + e.getMessage());
 		} 
-		//catch (InvocationTargetException | NoSuchMethodException e)
-		catch (InvocationTargetException e)
+		catch (InvocationTargetException | NoSuchMethodException e)
 		{
 			exception = e;
 			logger.error("Error " + e.getMessage());
@@ -357,15 +339,6 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 
 
 
-
-	private Method getInvocableMethod(String targetMethod, Object[] arguments) {
-		// TODO Auto-generated method stub
-		
-		return null;
-	}
-
-
-
 	private Object[] sanitize(ArrayList<?> arguments)
 	{		
 		// substitute nulls
@@ -382,7 +355,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			}
 			
 			
-			String klassName = argument.getClass().getName();
+			String klassName = argument.getClass().getSimpleName();
 			
 			if(klassName.equals("LinkedTreeMap"))
 			{
@@ -407,22 +380,24 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 					// guess what it is
 					sanitizedParameters.add(smartRecognizeNumeric(argument));
 				}
-				else if(klassName.equals("Integer"))
+				else if(type.equals("Integer"))
 				{
-					Integer param = Integer.parseInt(String.valueOf(data));
+					Double tmp = Double.parseDouble(String.valueOf(data));
+					Integer param = tmp.intValue();
 					sanitizedParameters.add(param);
 				}
-				else if(klassName.equals("Long"))
+				else if(type.equals("Long"))
 				{
-					Long param = Long.parseLong(String.valueOf(data));
+					Double tmp = Double.parseDouble(String.valueOf(data));
+					Long param = tmp.longValue();
 					sanitizedParameters.add(param);
 				}
-				else if(klassName.equals("Float"))
+				else if(type.equals("Float"))
 				{
 					Float param = Float.parseFloat(String.valueOf(data));
 					sanitizedParameters.add(param);
 				}
-				else if(klassName.equals("Double"))
+				else if(type.equals("Double"))
 				{
 					Double param = Double.parseDouble(String.valueOf(data));
 					sanitizedParameters.add(param);
@@ -455,11 +430,13 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			}
 			else if(klassName.equals("Integer"))
 			{
-				sanitizedParameters.add(Integer.parseInt(String.valueOf(argument)));
+				Double tmp = Double.parseDouble(String.valueOf(argument));
+				sanitizedParameters.add(tmp.intValue());
 			}
 			else if(klassName.equals("Long"))
 			{
-				sanitizedParameters.add(Long.parseLong(String.valueOf(argument)));
+				Double tmp = Double.parseDouble(String.valueOf(argument));
+				sanitizedParameters.add(tmp.longValue());
 			}
 		}
 		
@@ -502,7 +479,8 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 		{
 			try
 			{
-				Integer  param = Integer.parseInt(parameterString);
+				Double tmp = Double.parseDouble(parameterString);
+				Integer  param = tmp.intValue();
 				
 				if(String.valueOf(param).length() != parameterString.length())
 				throw new Exception("Number is not fit to be called an Integer");
@@ -514,7 +492,8 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			{
 				try
 				{
-					Long param = Long.parseLong(parameterString);
+					Double tmp = Double.parseDouble(parameterString);
+					Long param = tmp.longValue();
 					return param;
 				}
 				catch(Exception le)

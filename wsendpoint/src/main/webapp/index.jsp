@@ -20,13 +20,13 @@ function test()
   obj.id = "1234";
   obj.timestamp = new Date().getTime();
   obj.type = "RMI";
-  obj.method = "consoleLog";
-  obj.method = "add";
+  obj.method = "greet";
   
   var data = {};
   
-  obj.data = [{value:"my message", type: "String"}, {value:1, type: "Number"}, {value:2.023, type: "Number"}, {value:true, type: "Boolean"}, {value:null, type: "Null"}];
-  
+  //obj.data = [{value:"my message", type: "String"}, {value:1, type: "Number"}, {value:2.023, type: "Number"}, {value:true, type: "Boolean"}, {value:null, type: "Null"}];
+  //obj.data = [{value:1, type: "Integer"}, {value:2, type: "Integer"}];
+  obj.data = [{value:"Rajdeep", type: "String"}];
   websocket.send(JSON.stringify(obj)); 
 }
 
