@@ -118,6 +118,13 @@ public class Application extends MultiThreadedApplicationAdapter implements IJSB
 	
 	
 	@Invocable
+	public Double add(Double a, Double b)
+	{
+		return a + b;
+	}
+	
+	
+	@Invocable
 	public String greet(String title)
 	{
 		return "Hello, " + title;
