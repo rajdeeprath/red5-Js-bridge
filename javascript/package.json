@@ -4,7 +4,12 @@
   "description": "Red5 - Javascript bridge client library",
   "main": "src/client/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean:build": "rm -rf build",
+    "clean:dist": "rm -rf dist",
+    "build": "NODE_ENV=develop && gulp build",
+    "predist": "npm run clean:dist",
+    "dist": "NODE_ENV=production && gulp build"
   },
   "repository": {
     "type": "git",
@@ -25,24 +30,19 @@
   },
   "homepage": "https://github.com/rajdeeprath/red5-js-bridge#readme",
   "devDependencies": {
+    "browserify": "latest",
+    "gulp": "latest",
+    "gulp-browserify": "^0.5.1",
+    "gulp-compile-handlebars": "^0.6.1",
+    "gulp-concat": "latest",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "latest",
+    "gulp-util": "latest",
     "jquery": "^3.2.1",
     "jsdom": "^11.0.0",
-    "gulp": "latest",
-    "gulp-util": "latest",
-    "gulp-uglify": "latest",
-    "gulp-concat": "latest",
-    "gulp-compile-handlebars": "^0.6.1",
-    "gulp-rename": "^1.2.2"
+    "vinyl-source-stream": "latest"
   },
   "dependencies": {
     "hashids": "^1.1.1"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "clean:build": "rm -rf build",
-    "clean:dist": "rm -rf dist",
-    "build": "NODE_ENV=develop && gulp build",
-    "predist": "npm run clean:dist",
-    "dist": "NODE_ENV=production && gulp build"
   }
 }

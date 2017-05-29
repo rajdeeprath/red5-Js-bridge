@@ -16,6 +16,10 @@ var red5JsBridgeObject = (function (window) {
     */
     
     
+    function test() {
+        window.console.log("test");
+    }
+    
     
     
     /*
@@ -155,6 +159,7 @@ var red5JsBridgeObject = (function (window) {
     
     
     return {
+        test: test,
         invoke: invoke,
         on: registerEventHandler,
         off: unregisterEventHandler,
@@ -162,3 +167,6 @@ var red5JsBridgeObject = (function (window) {
     };
     
 }(window));
+
+
+module.exports = red5JsBridgeObject;
