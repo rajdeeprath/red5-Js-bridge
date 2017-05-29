@@ -44,13 +44,7 @@ var red5JsBridgeObject = (function (window) {
             connect();
         }
         
-        eventEmitter.once("session.id", function(id){
-            if(options.debug) {
-                console.log("Setting session id " + id);
-            }
-            sessionId = id;
-            eventEmitter.emit("session.ready");
-        });
+        eventEmitter.once("session.id", onSessionId);
         
         
         eventEmitter.once("session.closing", function(reason){
@@ -66,18 +60,11 @@ var red5JsBridgeObject = (function (window) {
     }
     
     
-    
-    
     function getConnectionURL() {
         return options.protocol +"://" + options.host + ":" + options.port + "/" + options.app;
     }
     
-    
-    
-    function test() {
-        window.console.log("test");
-    }
-    
+
     
     function isNumeric(n) {
         return !isNaN(parseFloat(n)) && isFinite(n);
@@ -96,6 +83,8 @@ var red5JsBridgeObject = (function (window) {
         if(options.debug) {
             console.log("Session id received");
         }
+        
+        eventEmitter.emit("session.ready");
     }
     
     
@@ -162,6 +151,7 @@ var red5JsBridgeObject = (function (window) {
     function handleMessage(response) {
         
         var obj = JSON.parse(response);
+        var messageId = obj.id;
         
         if(obj.hasOwnProperty("type")){
             if(obj["type"] === "EVENT"){         
@@ -169,7 +159,23 @@ var red5JsBridgeObject = (function (window) {
                 var evt = obj.data;
                 eventEmitter.emit(evt.name, evt.data);
             }else if(response["type"] === "RMI") {
+                
+                if(options.debug){
+                    console.log("RMI response received");
+                }
+                
                 // handle RMI response
+                if(rmiPromises[messageId]){
+                    var prom = rmiPromises[messageId];
+                    if(obj["status"] === "DATA"){
+                        prom.resolve(obj.data);
+                    }else{
+                        prom.reject(obj.data);
+                    }
+                    delete rmiPromises[messageId];
+                }else{
+                    throw new Error("No promise found for RMI response");
+                }
             }
         }
     }
@@ -231,7 +237,9 @@ var red5JsBridgeObject = (function (window) {
         var processedParameters = [];
         
         parameters.forEach(function (param) {
-           // TO DO 
+            if(options.debug) {
+                console.log("processing " + param);
+            }
         });
         
         
@@ -273,7 +281,27 @@ var red5JsBridgeObject = (function (window) {
     */
     function send(request) {
         
-         // Return promise
+         new Promise(function(resolve, reject) {
+            
+            var requestId = request.id;
+            
+            // Storing reference to resolve and reject
+            rmiPromises[requestId] = {
+                resolve: resovle,
+                reject: reject,
+                time: request.timestamp
+            };
+            
+            //send message via websockets
+            if (connected) 
+            {
+                send(request);
+            } 
+            else 
+            {
+                reject('Websocket connection is closed');
+            }
+        });
     }
      
     
@@ -282,10 +310,16 @@ var red5JsBridgeObject = (function (window) {
     /*
     * Invoke a method on server
     */
-    function invoke(method, parameters) {
+    function invoke() {
         
-        var request = createRMIRequest(method, parameters);
-        send(request);
+        if(arguments.length == 0) return;
+        
+        var args = Array.prototype.slice.call(arguments);        
+        var method = args[0];
+        var params = (args.length>1)?args.slice(1, args.length):[];
+        
+        var request = createRMIRequest(method, params);
+        //return send(request);
     }
     
     
