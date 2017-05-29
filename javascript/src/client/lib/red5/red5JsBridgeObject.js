@@ -7,6 +7,8 @@ var red5JsBridgeObject = (function (window) {
     'use strict';
     
     
+    var events = require('events');
+    var eventEmitter = new events.EventEmitter();
     var ws, evtHandlers = {}, rmiPromises = {}, connected = false, sessionId,
     options = {
             port: 8081,
@@ -35,11 +37,27 @@ var red5JsBridgeObject = (function (window) {
             }
         }
         
+       
         /* Initialize socket connection */
         
         if(options.autoConnect === true) {
             connect();
         }
+        
+        eventEmitter.once("session.id", function(id){
+            if(options.debug) {
+                console.log("Setting session id " + id);
+            }
+            sessionId = id;
+            eventEmitter.emit("session.ready");
+        });
+        
+        
+        eventEmitter.once("session.closing", function(reason){
+            if(options.debug) {
+                console.log("Session closing." + reason);
+            }
+        });
         
         
         if(options.debug) {
@@ -103,6 +121,8 @@ var red5JsBridgeObject = (function (window) {
         if(options.debug) {
             console.log("Connected");
         }
+        
+        eventEmitter.emit("session.connected");
     }
     
     
@@ -116,11 +136,13 @@ var red5JsBridgeObject = (function (window) {
     }
     
     
-    function onSocketError(evt){
+    function onSocketError(error){
         
         if(options.debug) {
-            console.log("Socket error " + JSON.stringify(evt));
+            console.log("Socket error " + JSON.stringify(error));
         }
+        
+        eventEmitter.emit("session.error", error);
     }
     
     
@@ -131,6 +153,8 @@ var red5JsBridgeObject = (function (window) {
         if(options.debug) {
             console.log("Socket closed");
         }
+        
+        eventEmitter.emit("session.closed");
     }
     
     
@@ -140,18 +164,10 @@ var red5JsBridgeObject = (function (window) {
         var obj = JSON.parse(response);
         
         if(obj.hasOwnProperty("type")){
-            if(obj["type"] === "EVENT"){
-                if(options.debug) {
-                    console.log("Event received");
-                }                
+            if(obj["type"] === "EVENT"){         
                 // handle event
                 var evt = obj.data;
-                if(evt.name === "session.id"){
-                    sessionId = evt.data;
-                    if(options.debug) {
-                        console.log("Session Id set " + sessionId);
-                    }
-                }
+                eventEmitter.emit(evt.name, evt.data);
             }else if(response["type"] === "RMI") {
                 // handle RMI response
             }
@@ -181,7 +197,7 @@ var red5JsBridgeObject = (function (window) {
     
     
     /*
-    * Check if we have valid optiosn for websocket connection to red5 app
+    * Check if we have valid options for websocket connection to red5 app
     */
     
     function isValidOptions(){
@@ -288,13 +304,16 @@ var red5JsBridgeObject = (function (window) {
     * Register a handler for event
     */
     function registerEventHandler(evt, handler) {
-        
-        if (evtHandlers[evt] === 'undefined') {
-            evtHandlers[evt] = [];
-        }
-        
-        
-        evtHandlers[evt].push(handler);
+        eventEmitter.addListener(evt, handler);
+    }
+    
+    
+    
+    /*
+    * Register a handler for event just once
+    */
+    function registerOnceEventHandler(evt, handler) {
+        eventEmitter.once(evt, handler);
     }
     
     
@@ -303,22 +322,11 @@ var red5JsBridgeObject = (function (window) {
     * UnRegister a handler for event
     */
     function unregisterEventHandler(evt, handler) {
-        
-        if (evtHandlers[evt] === 'undefined') {
-            return;
-        }
-        
-        var handlers = evtHandlers[evt], i, fn;
-        
-        for (i = 0; i < handlers.length; i += 1) {
-            if (handlers[i] === handler) {
-                fn = handlers.splice(i, 1);
-                return fn;
-            }
-        }
-        
-        return;
+        eventEmitter.removeListener(evt, handler);
     }
+    
+    
+    
     
     
     
@@ -326,27 +334,18 @@ var red5JsBridgeObject = (function (window) {
     * Clear all handlers for event
     */
     function unregisterAllHandlers(evt) {
-        
-        if (evtHandlers[evt] === 'undefined') {
-            return;
-        }
-        
-        var handlers = evtHandlers[evt], i = evtHandlers[evt].length;
-        
-        while (i > 0) {
-            handlers.splice(i, 1);
-            i -= 1;
-        }
-        
+        eventEmitter.removeAllListeners(evt);        
     }
     
     
+    
+    
     return {
-        test: test,
         invoke: invoke,
         getSessionId: getSessionId,
         on: registerEventHandler,
         off: unregisterEventHandler,
+        onOnce:registerOnceEventHandler,
         offAll: unregisterAllHandlers,
         init: init
     };
