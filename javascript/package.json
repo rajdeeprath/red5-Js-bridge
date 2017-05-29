@@ -1,0 +1,48 @@
+{
+  "name": "red5jsbridge",
+  "version": "0.0.1",
+  "description": "Red5 - Javascript bridge client library",
+  "main": "src/client/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rajdeeprath/red5-js-bridge.git"
+  },
+  "keywords": [
+    "Red5",
+    "Red5pro",
+    "javascript",
+    "bridge",
+    "Red5",
+    "Websocket"
+  ],
+  "author": "Rajdeep",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rajdeeprath/red5-js-bridge/issues"
+  },
+  "homepage": "https://github.com/rajdeeprath/red5-js-bridge#readme",
+  "devDependencies": {
+    "jquery": "^3.2.1",
+    "jsdom": "^11.0.0",
+    "gulp": "latest",
+    "gulp-util": "latest",
+    "gulp-uglify": "latest",
+    "gulp-concat": "latest",
+    "gulp-compile-handlebars": "^0.6.1",
+    "gulp-rename": "^1.2.2"
+  },
+  "dependencies": {
+    "hashids": "^1.1.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean:build": "rm -rf build",
+    "clean:dist": "rm -rf dist",
+    "build": "NODE_ENV=develop && gulp build",
+    "predist": "npm run clean:dist",
+    "dist": "NODE_ENV=production && gulp build"
+  }
+}
