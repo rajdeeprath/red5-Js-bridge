@@ -200,7 +200,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 		OutGoingMessage message = new OutGoingMessage();
 		message.setType(BridgeMessageType.EVENT);
 		message.setStatus(MessageStatus.DATA);
-		message.setData(new EventMessage("Closing", reason)); // some how pack =>  close as special event
+		message.setData(new EventMessage("session.closing", reason)); // some how pack =>  close as special event
 		connManager.sendToAll(message);
 		
 		
@@ -219,7 +219,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 		OutGoingMessage message = new OutGoingMessage();
 		message.setType(BridgeMessageType.EVENT);
 		message.setStatus(MessageStatus.DATA);
-		message.setData(new EventMessage("Closing", null)); // some how pack =>  close as special event
+		message.setData(new EventMessage("session.closing", null)); // some how pack =>  close as special event
 		connManager.sendToAll(message);
 		
 		
