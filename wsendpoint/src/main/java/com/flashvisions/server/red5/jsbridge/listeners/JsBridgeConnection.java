@@ -19,15 +19,17 @@ public class JsBridgeConnection {
 	
 	public static String TAG = "JsBridgeConnection";
 	
-	WebSocketConnection signalChannel;
+	private WebSocketConnection signalChannel;
 	
-	String host;
+	private String host;
 	
-	String remoteAddress;
+	private String remoteAddress;
 	
 	int remotePort;
 	
-	MessageConverter converter;
+	private MessageConverter converter;
+	
+	private String sessionId;
 	
 	
 	
@@ -153,5 +155,15 @@ public class JsBridgeConnection {
         		logger.warn("Exception on ping to {}", signalChannel);
             }
         }
+	}
+
+
+	public String getSessionId() {
+		return sessionId;
+	}
+
+
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
 	}
 }

@@ -5,6 +5,8 @@ import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.beanutils.MethodUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -51,6 +53,8 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	private IScope appScope;
 	
 	private MultiThreadedApplicationAdapter appAdapter;
+	
+	private ExecutorService threadedExecutor = Executors.newCachedThreadPool();
 	
 	private List<Method> invocableMethods;
 	
@@ -110,8 +114,22 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	@Override
 	public void onWSConnect(WebSocketConnection conn) 
 	{
-		JsBridgeConnection bridgeConnection = ConnectionManager.createBridgeConnectionObject(conn);
+		final JsBridgeConnection bridgeConnection = ConnectionManager.createBridgeConnectionObject(conn);
 		connManager.addConnection(bridgeConnection);
+		
+		threadedExecutor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub				
+				OutGoingMessage message = new OutGoingMessage();
+				message.setType(BridgeMessageType.EVENT);
+				message.setStatus(MessageStatus.DATA);
+				message.setData(new EventMessage("session.id", bridgeConnection.getSessionId()));
+				connManager.sendToConnection(bridgeConnection.getSignalChannel(), message);
+			}
+			
+		});
 	}
 
 	
@@ -128,6 +146,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	@Override
 	public void stop() 
 	{
+		this.threadedExecutor.shutdown();
 		this.connManager.shutdown();
 	}
 

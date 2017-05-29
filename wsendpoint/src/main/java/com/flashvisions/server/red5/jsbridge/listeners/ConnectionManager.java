@@ -2,11 +2,13 @@ package com.flashvisions.server.red5.jsbridge.listeners;
 
 import java.net.InetSocketAddress;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.net.websocket.WebSocketConnection;
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ public class ConnectionManager {
 		InetSocketAddress addr = (InetSocketAddress) conn.getSession().getRemoteAddress();
 		connection.setRemoteAddress(addr.getAddress().getHostAddress());
 		connection.setRemotePort(addr.getPort());
+		connection.setSessionId(generateSessionId(conn, addr.getAddress().getHostAddress()));
 		
 		conn.getSession().setAttribute(JsBridgeConnection.TAG, connection);
 
@@ -56,6 +59,12 @@ public class ConnectionManager {
 	
 	
 	
+	private static String generateSessionId(WebSocketConnection conn, String host) 
+	{
+		return DigestUtils.md5Hex(host + conn.getId());
+	}
+
+
 	public void closeAllConnections()
 	{
 		Iterator<JsBridgeConnection> iterator = connections.iterator(); 
