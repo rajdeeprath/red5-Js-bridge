@@ -328,13 +328,22 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 				throw new SecurityException("Method found is not invocable");
 			}
 			
-			Object result = method.invoke(appAdapter, args);
 			
 			response = new OutGoingMessage();
 			response.setId(request.getId());
 			response.setType(request.getType());
 			response.setStatus(MessageStatus.DATA);
-			response.setData(result);
+			
+			if(method.getReturnType() == void.class || method.getReturnType() == Void.TYPE)
+			{
+				Object result = method.invoke(appAdapter, args);
+				response.setData(result);
+			}
+			else
+			{
+				Object result = method.invoke(appAdapter, args);
+			}
+			
 			
 			connManager.sendToConnection(message.getConnection(), response);
 		}
