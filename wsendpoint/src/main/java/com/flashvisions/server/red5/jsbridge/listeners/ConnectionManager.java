@@ -122,6 +122,31 @@ public class ConnectionManager {
 	
 	
 	
+	
+	public void sendApplicationEvents(IMessage message)
+	{
+		Iterator<JsBridgeConnection> iterator = connections.iterator();
+		while (iterator.hasNext())
+	    {
+	    	JsBridgeConnection conn = iterator.next();
+	    	if(conn != null && conn.isConnected() && conn.isSubscribedToApplicationEvents())
+	    	{
+	    		try 
+	    		{
+					conn.send(message);
+				} 
+	    		catch (Exception e) 
+	    		{
+					e.printStackTrace();
+				}
+	    	}
+	    }
+	}
+	
+	
+	
+	
+	
 	public void sendToIP(String ip, IMessage message) 
 	{
 		Iterator<JsBridgeConnection> iterator = connections.iterator();

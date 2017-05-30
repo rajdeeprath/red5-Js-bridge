@@ -31,6 +31,8 @@ public class JsBridgeConnection {
 	
 	private String sessionId;
 	
+	private boolean isSubscribedToApplicationEvents;
+	
 	
 	
 	public JsBridgeConnection()
@@ -165,5 +167,16 @@ public class JsBridgeConnection {
 
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
+	}
+
+
+	public boolean isSubscribedToApplicationEvents() {
+		return isSubscribedToApplicationEvents;
+	}
+
+
+	public void setSubscribedToApplicationEvents(
+			boolean isSubscribedToApplicationEvents) {
+		this.isSubscribedToApplicationEvents = isSubscribedToApplicationEvents;
 	}
 }
