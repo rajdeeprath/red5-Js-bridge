@@ -336,12 +336,12 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			
 			if(method.getReturnType() == void.class || method.getReturnType() == Void.TYPE)
 			{
-				Object result = method.invoke(appAdapter, args);
-				response.setData(result);
+				method.invoke(appAdapter, args);
 			}
 			else
 			{
 				Object result = method.invoke(appAdapter, args);
+				response.setData(result);
 			}
 			
 			
