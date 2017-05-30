@@ -12,8 +12,8 @@ var red5JsBridgeObject = (function (window) {
     var typeCheck = require('type-check').typeCheck;
     
     var eventEmitter = new Events.EventEmitter();
-    var ws, evtHandlers = {}, rmiPromises = {}, connected = false, sessionId, rmiRecordKeeper,
-    options = {
+    var ws, rmiPromises = {}, connected = false, sessionId, rmiRecordKeeper,messageCounter = 0, 
+        options = {
             port: 8081,
             protocol: "ws",
             host: "localhost",
@@ -34,9 +34,11 @@ var red5JsBridgeObject = (function (window) {
         }
         
         var now = new Date().getTime();
-        for (var key in rmiPromises) {
+        for (var key in rmiPromises) 
+        {
             var obj = rmiPromises[key];
-            if(obj.timestamp && (now - obj.timestamp > rmiTimeout)){
+            if(obj.timestamp && (now - obj.timestamp > rmiTimeout))
+            {
                 obj.reject(new Error("Request failed to commute"));
                 delete rmiPromises[key];
             }
@@ -45,16 +47,22 @@ var red5JsBridgeObject = (function (window) {
     
     
     
-    function startRMIRegistryMonitor(){
-        if(rmiRecordKeeper) clearInterval(rmiRecordKeeper);
+    function startRMIRegistryMonitor()
+    {
+        if(rmiRecordKeeper) {
+            clearInterval(rmiRecordKeeper);
+        }
         rmiRecordKeeper = setInterval(manageRMIRegistry, 10000);
     }
     
     
     
     
-    function stopRMIRegistryMonitor(){
-        if(rmiRecordKeeper) clearInterval(rmiRecordKeeper);
+    function stopRMIRegistryMonitor()
+    {
+        if(rmiRecordKeeper) {
+            clearInterval(rmiRecordKeeper);
+        }
     }
     
     
@@ -65,25 +73,26 @@ var red5JsBridgeObject = (function (window) {
     */
     function init(opts) {
 
-        
         /* Copying options */
         
-        if (opts) {
-            for (var k in opts) {
+        if (opts) 
+        {
+            for (var k in opts) 
+            {
                 options[k]=opts[k];
             }
-        }
-        
+        }        
        
+        
         /* Initialize socket connection */
         
         if(options.autoConnect === true) {
             connect();
         }
         
+        
+        /* Register for special bridge session events */
         eventEmitter.once("session.id", onSessionId);
-        
-        
         eventEmitter.once("session.closing", function(reason){
             if(options.debug) {
                 console.log("Session closing." + reason);
@@ -113,14 +122,13 @@ var red5JsBridgeObject = (function (window) {
     * Session Id from server
     */
     
-    function onSessionId(id){
-        
-        sessionId = id;
-        
+    function onSessionId(id)
+    {
         if(options.debug) {
             console.log("Session id received");
         }
         
+        sessionId = id;        
         eventEmitter.emit("session.ready");
     }
     
@@ -129,7 +137,8 @@ var red5JsBridgeObject = (function (window) {
     /*
     * Get Current Session Id
     */
-    function getSessionId() {
+    function getSessionId() 
+    {
         return sessionId;
     }
     
@@ -140,21 +149,22 @@ var red5JsBridgeObject = (function (window) {
     */
     
     
-    function onSocketOpen(evt){
-        
-        connected = true;
-        
+    function onSocketOpen(evt)
+    {
         if(options.debug) {
             console.log("Connected");
         }
         
+        connected = true;
         startRMIRegistryMonitor();
         eventEmitter.emit("session.connected");
     }
     
     
-    function onSocketMessage(evt){
-        
+    
+    
+    function onSocketMessage(evt)
+    {    
         if(options.debug) {
             console.log("Message received " + JSON.stringify(evt.data));
         }
@@ -163,8 +173,10 @@ var red5JsBridgeObject = (function (window) {
     }
     
     
-    function onSocketError(error){
-        
+    
+    
+    function onSocketError(error)
+    {    
         if(options.debug) {
             console.log("Socket error " + JSON.stringify(error));
         }
@@ -173,46 +185,58 @@ var red5JsBridgeObject = (function (window) {
     }
     
     
-    function onSocketClose(evt){
-        
-        connected = false;
-        
+    
+    
+    
+    function onSocketClose(evt)
+    {    
         if(options.debug) {
             console.log("Socket closed");
         }
         
+        connected = false;
         stopRMIRegistryMonitor();
         eventEmitter.emit("session.closed");
     }
     
     
     
-    function handleMessage(response) {
-        
+    
+    function handleMessage(response)
+    {
         var obj = JSON.parse(response);
         var messageId = obj.id;
         
-        if(obj.hasOwnProperty("type")){
-            if(obj["type"] === "EVENT"){         
+        if(obj.hasOwnProperty("type"))
+        {
+            if(obj["type"] === "EVENT")
+            {         
                 // handle event
                 var evt = obj.data;
                 eventEmitter.emit(evt.name, evt.data);
-            }else if(obj["type"] === "RMI") {
-                
+            }
+            else if(obj["type"] === "RMI") 
+            {
                 if(options.debug){
                     console.log("RMI response received");
                 }
                 
                 // handle RMI response
-                if(rmiPromises[messageId]){
+                if(rmiPromises[messageId])
+                {
                     var prom = rmiPromises[messageId];
-                    if(obj["status"] === "DATA"){
+                    if(obj["status"] === "DATA")
+                    {
                         prom.resolve(obj.data);
-                    }else{
+                    }
+                    else
+                    {
                         prom.reject(obj.data);
                     }
                     delete rmiPromises[messageId];
-                }else{
+                }
+                else
+                {
                     throw new Error("No promise found for RMI response");
                 }
             }
@@ -221,19 +245,25 @@ var red5JsBridgeObject = (function (window) {
     
     
     
-    function connect(){
-        
-        if(isValidOptions()){
-            if(!ws) {
+    function connect()
+    {   
+        if(isValidOptions())
+        {
+            if(!ws) 
+            {
                 ws = new WebSocket(getConnectionURL(), options.channel);
                 ws.onopen = onSocketOpen;
                 ws.onmessage = onSocketMessage;
                 ws.onerror = onSocketError;
                 ws.onclose = onSocketClose;
-            }else{
+            }
+            else
+            {
                 throw new Error("Websocket was already initialized");
             }
-        }else{
+        }
+        else
+        {
             throw new Error("Invalid options for websocket connection");
         }
     }
@@ -245,19 +275,29 @@ var red5JsBridgeObject = (function (window) {
     * Check if we have valid options for websocket connection to red5 app
     */
     
-    function isValidOptions(){
-        
+    function isValidOptions()
+    {    
         var valid = true;
-        if(options){
-            if(!options.port || !isNumeric(options.port)){
+        if(options)
+        {
+            if(!options.port || !isNumeric(options.port))
+            {
                valid = false; 
-            }else if(options.protocol !== "ws" && options.protocol !== "wss" ){
+            }
+            else if(options.protocol !== "ws" && options.protocol !== "wss" )
+            {
                valid = false; 
-            }else if(!options.app){
+            }
+            else if(!options.app)
+            {
                valid = false; 
-            }else if(!options.host){
+            }
+            else if(!options.host)
+            {
                valid = false; 
-            }else if(!options.channel){
+            }
+            else if(!options.channel)
+            {
                valid = false; 
             }
         }
@@ -271,8 +311,8 @@ var red5JsBridgeObject = (function (window) {
     /*
     * Identify parameter types smartly and package them for sending over the bridge
     */
-    function preprocess(parameters) {
-        
+    function preprocess(parameters) 
+    {
         var processedParameters = [];
         
         parameters.forEach(function (param) {
@@ -337,8 +377,13 @@ var red5JsBridgeObject = (function (window) {
     /*
     * Generate a unique id for RMI requests
     */
-    function generateUniqueId() {
-        return sessionId;
+    function generateUniqueId() 
+    {    
+        if(messageCounter > Number.MAX_VALUE) {
+            messageCounter = 0;
+        }
+        
+        return sessionId + "-" + (messageCounter++);
     }
     
     
@@ -463,6 +508,44 @@ var red5JsBridgeObject = (function (window) {
     
     
     
+    function destroy(){
+        
+        stopRMIRegistryMonitor();
+        
+        
+        if(ws) {           
+            if(connected) {
+                ws.close();
+                ws.onopen = undefined;
+                ws.onmessage = undefined;
+                ws.onerror = undefined;
+                ws.onclose = undefined;
+                ws = undefined
+                connected = false;
+            }
+        }
+        
+        
+        if(rmiPromises) {
+            for(var i in rmiPromises){
+                delete rmiPromises[i];
+            }
+        }
+        rmiPromises = undefined;
+
+        
+        if(eventEmitter){
+            eventEmitter.removeAllListeners();
+        }
+        eventEmitter = undefined;
+        
+        
+        sessionId = undefined
+    }
+    
+    
+    
+    
     return {
         invoke: invoke,
         getSessionId: getSessionId,
@@ -474,6 +557,7 @@ var red5JsBridgeObject = (function (window) {
     };
     
 }(window));
+
 
 
 module.exports = red5JsBridgeObject;

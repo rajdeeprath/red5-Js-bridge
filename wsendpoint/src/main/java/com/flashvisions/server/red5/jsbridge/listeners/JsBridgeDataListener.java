@@ -449,9 +449,14 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 					Double param = Double.parseDouble(String.valueOf(data));
 					sanitizedParameters.add(param);
 				}
+				else if(type.equals("JsonObject"))
+				{
+					JsonObject param = new JsonParser().parse(data.toString()).getAsJsonObject();
+					sanitizedParameters.add(param);
+				}
 				else
 				{
-					throw new InvalidParameterException("Unrecognized parameter format");
+					throw new InvalidParameterException("Unrecognized parameter type");
 				}
 			}
 			else if(klassName.equals("String"))
@@ -484,6 +489,10 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			{
 				Double tmp = Double.parseDouble(String.valueOf(argument));
 				sanitizedParameters.add(tmp.longValue());
+			}
+			else
+			{
+				throw new InvalidParameterException("Unrecognized parameter type");
 			}
 		}
 		
