@@ -1,5 +1,7 @@
 package com.flashvisions.server.red5.jsbridge.alternate.component;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -8,6 +10,7 @@ import org.red5.server.adapter.IApplication;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
+import org.red5.server.api.Red5;
 import org.red5.server.api.scope.IScope;
 import org.red5.server.api.so.ISharedObject;
 import org.red5.server.api.so.ISharedObjectSecurity;
@@ -33,6 +36,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 	
 	MultiThreadedApplicationAdapter appAdapter;
 	
+	IScope appScope;
+	
 	
 	
 	public MultiThreadedApplicationAdapterDelegate(){
@@ -49,10 +54,14 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 	
 	public MultiThreadedApplicationAdapterDelegate(IJsBridge bridge, MultiThreadedApplicationAdapter appAdapter){
 		this.bridge = bridge;
-		this.appAdapter = appAdapter;
+		this.appAdapter = appAdapter;		
 	}	
 	
 	
+	
+	public void initialize(){
+		this.appScope = this.appAdapter.getScope();
+	}
 	
 	
 	
@@ -213,43 +222,101 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 	 ****************************************************/
 	
 	
-	protected List<Connection> getConnections() {
-		// TODO Auto-generated method stub
+	public List<Connection> getConnections() {
+		
+		Set<IConnection> connections = appScope.getClientConnections();
+		List<Connection> aliases = new ArrayList<Connection>();
+		
+		for(IConnection conn : connections){
+			aliases.add(this.toConnection(conn));
+		}
+		
+		return aliases;
+	}
+	
+	
+	
+	public Connection getConnection(String sessionId) {
+		IConnection conn = getConnectionById(sessionId);
+		if(conn != null){
+			return toConnection(conn);
+		}		
+		return null;
+	}
+
+	
+	
+	
+	public boolean addAtrributes(Connection conn, Map<String, Object> attribute) {
+		
+		IConnection connection = this.getConnectionById(conn.getSessionId());
+		if(conn != null){
+			return connection.setAttributes(attribute);
+		}
+		
+		return false;
+	}
+	
+	
+	
+	
+	public boolean addAtrribute(Connection conn, String name, Object value) {
+		
+		IConnection connection = this.getConnectionById(conn.getSessionId());
+		if(conn != null){
+			return connection.setAttribute(name, value);
+		}
+		
+		return false;
+	} 
+
+	
+	
+	
+	public Map<String, Object> getAtrributes(Connection conn) {
+		
+		IConnection connection = this.getConnectionById(conn.getSessionId());
+		if(conn != null){
+			return connection.getAttributes();
+		}
+		
+		return null;
+	}
+
+	
+	
+	
+	public Object getAtrribute(Connection conn, String name) {
+		
+		IConnection connection = this.getConnectionById(conn.getSessionId());
+		if(conn != null){
+			return connection.getAttribute(name);
+		}
+		
 		return null;
 	}
 	
 	
 	
-	protected Connection getConnection(String sessionId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-
-	
-	protected boolean rejectClient() throws ClientRejectedException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	
-	protected boolean rejectClient(Object reason) throws ClientRejectedException {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	
-	
-	public void disconnect(Connection conn, JsonObject scope) {
-		// TODO Auto-generated method stub
+	public void disconnect(Connection conn) 
+	{
+		IConnection connection = this.getConnectionById(conn.getSessionId());
+		if(conn != null){
+			connection.close();
+		}
 	}
 	
 	
 	
-	public void disconnect(Connection conn) {
-		// TODO Auto-generated method stub
+	public void ping(Connection conn) {
+		
+		IConnection connection = this.getConnectionById(conn.getSessionId());
+		if(conn != null){
+			connection.ping();
+		}
 	}
-
+	
+	
 	
 	
 	
@@ -363,4 +430,57 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 		return false;
 	}
 	
+	
+	
+	/****************************************************
+	 * 
+	 * RED5-JS UTILITIES
+	 * 
+	 ****************************************************/
+	
+	
+	private IConnection getConnectionById(String sessionId){
+		
+		IScope appScope = appAdapter.getScope();
+		Set<IConnection>connections = appScope.getClientConnections();
+		for(IConnection connection: connections){
+			if(connection.getSessionId().equalsIgnoreCase(sessionId)){
+				return connection;
+			}
+		}
+		
+		return null;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	private Connection toConnection(IConnection connection){
+		
+		Connection alias = new Connection();
+		alias.setSessionId(connection.getSessionId());
+		alias.setConnected(connection.isConnected());
+		alias.setConnectionParams(connection.getConnectParams());
+		alias.setDroppedMessages(connection.getDroppedMessages());
+		alias.setDuty(connection.getDuty().name());
+		alias.setEncoding(connection.getEncoding().name());
+		alias.setHost(connection.getHost());
+		alias.setLastPingTime(connection.getLastPingTime());
+		alias.setPath(connection.getPath());
+		alias.setPendingMessages(connection.getPendingMessages());
+		alias.setProtocol(connection.getProtocol());
+		alias.setReadBytes(connection.getReadBytes());
+		alias.setWrittenBytes(connection.getWrittenBytes());
+		alias.setReadMessages(connection.getReadMessages());
+		alias.setWrittenMessages(connection.getWrittenMessages());
+		alias.setRemoteAddress(connection.getRemoteAddress());
+		alias.setRemoteAddresses(connection.getRemoteAddresses());
+		alias.setRemotePort(connection.getRemotePort());
+		
+		return alias;
+	}
 }

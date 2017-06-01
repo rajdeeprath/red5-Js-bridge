@@ -12,9 +12,6 @@ public class Connection {
 	private String encoding;
 	
 	
-	private String type;
-	
-	
 	private boolean connected;
 	
 	
@@ -80,16 +77,6 @@ public class Connection {
 
 	public void setEncoding(String encoding) {
 		this.encoding = encoding;
-	}
-
-
-	public String getType() {
-		return type;
-	}
-
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 
