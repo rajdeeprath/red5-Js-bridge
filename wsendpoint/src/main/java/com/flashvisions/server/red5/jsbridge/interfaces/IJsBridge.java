@@ -10,4 +10,5 @@ public interface IJsBridge {
 	public int getTotalConnection();
 	public void close(String reason);
 	public void close();
+	void broadcastApplicationEvent(String event, Object data);
 }

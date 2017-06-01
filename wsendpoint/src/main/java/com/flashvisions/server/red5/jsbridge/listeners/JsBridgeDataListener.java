@@ -4,12 +4,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.beanutils.MethodUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.listener.WebSocketDataListener;
@@ -30,7 +28,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import com.flashvisions.server.red5.jsbridge.Application;
 import com.flashvisions.server.red5.jsbridge.exceptions.MessageFormatException;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
@@ -194,7 +191,8 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	
 	
 	
-	private void broadcastApplicationEvent(String event, Object data) 
+	@Override
+	public void broadcastApplicationEvent(String event, Object data) 
 	{
 		OutGoingMessage message = new OutGoingMessage();
 		message.setType(BridgeMessageType.EVENT);

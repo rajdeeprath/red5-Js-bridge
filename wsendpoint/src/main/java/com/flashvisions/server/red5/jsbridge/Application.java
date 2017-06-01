@@ -29,6 +29,7 @@ import org.red5.server.api.scope.IScope;
 //import org.slf4j.Logger;
 
 
+import org.red5.server.api.stream.IBroadcastStream;
 import org.red5.server.plugin.PluginRegistry;
 import org.slf4j.Logger;
 import org.springframework.beans.BeansException;
@@ -129,30 +130,4 @@ public class Application extends MultiThreadedApplicationAdapter implements IJSB
 	{
 		return "Hello, " + title;
 	}
-
-
-	@Override
-	public boolean appConnect(IConnection conn, Object[] params) {
-		// TODO Auto-generated method stub
-		
-		ConnectionInfo info = new ConnectionInfo();
-		info.setId(conn.getSessionId());
-		info.setRemoteAddress(conn.getRemoteAddress());
-		info.setPath(conn.getPath());
-		info.setType(conn.getProtocol());
-		
-		bridge.broadcastEvent("appConnect", info);
-		
-		return super.appConnect(conn, params);
-	}
-
-
-	@Override
-	public void appDisconnect(IConnection conn) {
-		// TODO Auto-generated method stub
-		super.appDisconnect(conn);
-	}
-
-	
-	
 }
