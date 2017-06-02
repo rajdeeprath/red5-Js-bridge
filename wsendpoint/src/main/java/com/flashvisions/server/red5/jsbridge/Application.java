@@ -24,12 +24,10 @@ import org.red5.net.websocket.WebSocketPlugin;
 import org.red5.net.websocket.WebSocketScope;
 import org.red5.net.websocket.WebSocketScopeManager;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
-import org.red5.server.api.IConnection;
 import org.red5.server.api.scope.IScope;
 //import org.slf4j.Logger;
 
 
-import org.red5.server.api.stream.IBroadcastStream;
 import org.red5.server.plugin.PluginRegistry;
 import org.slf4j.Logger;
 import org.springframework.beans.BeansException;

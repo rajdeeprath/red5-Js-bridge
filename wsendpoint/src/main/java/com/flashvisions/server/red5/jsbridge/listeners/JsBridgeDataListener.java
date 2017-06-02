@@ -13,9 +13,7 @@ import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.listener.WebSocketDataListener;
 import org.red5.net.websocket.model.MessageType;
 import org.red5.net.websocket.model.WSMessage;
-import org.red5.server.adapter.IApplication;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
-import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.scope.IScope;
 import org.red5.server.api.scope.ScopeType;
@@ -28,6 +26,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import com.flashvisions.server.red5.jsbridge.alternate.component.MultiThreadedApplicationAdapterDelegate;
 import com.flashvisions.server.red5.jsbridge.exceptions.MessageFormatException;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
@@ -277,8 +276,10 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	            appScope = (WebScope) applicationContext.getBean("web.scope");
 	            logger.debug("Linked to app scope: {}", appScope);
 	            appAdapter = (MultiThreadedApplicationAdapter) applicationContext.getBean("web.handler");
-	            appAdapter.addListener(appListener);
 	            logger.debug("Linked to app: {}", appAdapter);
+	            
+	            MultiThreadedApplicationAdapterDelegate delegate = new MultiThreadedApplicationAdapterDelegate(this, appAdapter);
+	            delegate.initialize();
 	     } 
 		 else 
 	     {
@@ -607,91 +608,4 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			throw new MessageFormatException("Invalid message format.Cause " + me.getMessage());
 		}
 	}
-	
-	
-	
-	
-	private IApplication appListener = new IApplication(){
-		
-
-		@Override
-		public boolean appStart(IScope app) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.appStart", null);
-			return true;
-		}
-
-		@Override
-		public boolean appConnect(IConnection conn, Object[] params) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.appConnect", null);
-			return true;
-		}
-
-		@Override
-		public boolean appJoin(IClient client, IScope app) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.appJoin", null);
-			return true;
-		}
-
-		@Override
-		public void appDisconnect(IConnection conn) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.appDisconnect", null);
-			
-		}
-
-		@Override
-		public void appLeave(IClient client, IScope app) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.appLeave", null);
-		}
-
-		@Override
-		public void appStop(IScope app) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.appStop", null);
-		}
-
-		@Override
-		public boolean roomStart(IScope room) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.roomStart", null);
-			return true;
-		}
-
-		@Override
-		public boolean roomConnect(IConnection conn, Object[] params) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.roomConnect", null);
-			return true;
-		}
-
-		@Override
-		public boolean roomJoin(IClient client, IScope room) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.roomJoin", null);
-			return true;
-		}
-
-		@Override
-		public void roomDisconnect(IConnection conn) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.roomDisconnect", null);
-		}
-
-		@Override
-		public void roomLeave(IClient client, IScope room) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.roomLeave", null);
-		}
-
-		@Override
-		public void roomStop(IScope room) {
-			// TODO Auto-generated method stub
-			broadcastApplicationEvent("application.roomStop", null);
-		}
-		
-	};
 }
