@@ -1,10 +1,14 @@
 package com.flashvisions.server.red5.jsbridge.alternate.component;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.adapter.IApplication;
@@ -12,12 +16,20 @@ import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.Red5;
+import org.red5.server.api.scope.IBroadcastScope;
 import org.red5.server.api.scope.IScope;
+import org.red5.server.api.scope.ScopeType;
 import org.red5.server.api.so.ISharedObject;
 import org.red5.server.api.stream.IBroadcastStream;
+import org.red5.server.api.stream.IStream;
+import org.red5.server.api.stream.IStreamPlaybackSecurity;
+import org.red5.server.api.stream.IStreamPublishSecurity;
 import org.red5.server.api.stream.ISubscriberStream;
 import org.red5.server.api.stream.ResourceExistException;
 import org.red5.server.api.stream.ResourceNotFoundException;
+import org.red5.server.messaging.IPipeConnectionListener;
+import org.red5.server.messaging.PipeConnectionEvent;
+import org.red5.server.stream.ClientBroadcastStream;
 import org.red5.server.util.ScopeUtils;
 import org.slf4j.Logger;
 
@@ -25,12 +37,13 @@ import com.flashvisions.server.red5.jsbridge.alternate.model.BroadcastStream;
 import com.flashvisions.server.red5.jsbridge.alternate.model.Connection;
 import com.flashvisions.server.red5.jsbridge.alternate.model.Scope;
 import com.flashvisions.server.red5.jsbridge.alternate.model.SharedObject;
+import com.flashvisions.server.red5.jsbridge.alternate.model.Stream;
 import com.flashvisions.server.red5.jsbridge.alternate.model.SubscriberStream;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
 import com.flashvisions.server.red5.jsbridge.model.ConnectParamsEvent;
 import com.flashvisions.server.red5.jsbridge.model.ScopeConnectionEvent;
 
-public class MultiThreadedApplicationAdapterDelegate implements IApplication {
+public class MultiThreadedApplicationAdapterDelegate implements IApplication, IStreamPublishSecurity, IStreamPlaybackSecurity {
 	
 	private static final Logger logger = Red5LoggerFactory.getLogger(MultiThreadedApplicationAdapterDelegate.class, "red5-js-bridge");
 
@@ -41,6 +54,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 	
 	IScope appScope;
 	
+	ExecutorService executor;
 	
 	
 	public MultiThreadedApplicationAdapterDelegate(){
@@ -64,6 +78,11 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 	
 	public void initialize(){
 		this.appScope = this.appAdapter.getScope();
+		this.appAdapter.registerStreamPublishSecurity(this);
+		this.appAdapter.registerStreamPlaybackSecurity(this);
+		
+		executor = Executors.newCachedThreadPool();
+		
 		logger.info("MultiThreadedApplicationAdapter Delegate initialized");
 	}
 	
@@ -164,6 +183,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 	public void appStop(IScope app) {
 		// TODO Auto-generated method stub
 		bridge.broadcastApplicationEvent("application.appStop", this.toScope(app));
+		executor.shutdown();
 	}
 
 	
@@ -241,6 +261,33 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 		bridge.broadcastApplicationEvent("application.roomStop", this.toScope(room));
 	}
 	
+	
+	
+	
+	public void streamBroadcastStart(IBroadcastStream stream) {
+		bridge.broadcastApplicationEvent("application.publishStart", this.toBroadcastStream(stream));
+	}
+	
+	
+	
+	
+	public void streamBroadcastClose(IBroadcastStream stream) {
+		bridge.broadcastApplicationEvent("application.publishStop", this.toBroadcastStream(stream));
+	}	
+
+	
+	
+	
+	public void streamSubscriberStart(IStream stream) {
+		bridge.broadcastApplicationEvent("application.subscribeStart", this.toStream(stream));
+	}
+	
+	
+	
+	
+	public void streamSubscriberClose(IStream stream) {
+		bridge.broadcastApplicationEvent("application.subscribeClose", this.toStream(stream));
+	}
 	
 	
 	
@@ -674,7 +721,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 		alias.setSaveFilename(stream.getSaveFilename());
 		alias.setStartTime(stream.getStartTime());
 		
-		return null;
+		return alias;
 	}
 	
 	
@@ -691,7 +738,22 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 		alias.setState(stream.getState().name());
 		alias.setStartTime(stream.getStartTime());
 		
-		return null;
+		return alias;
+	}
+	
+	
+	
+	
+	
+	private Stream toStream(IStream stream) 
+	{
+		Stream alias = new Stream();
+		alias.setName(stream.getName());
+		alias.setCreationTime(stream.getCreationTime());
+		alias.setScopePath(stream.getScope().getPath());
+		alias.setStartTime(stream.getStartTime());
+		
+		return alias;
 	}
 	
 	
@@ -714,11 +776,196 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication {
 	
 	
 	
-	
 	private IScope fromScope(Scope scope) throws ResourceNotFoundException {
 		IScope roomScope = ScopeUtils.resolveScope(appScope, scope.getPath());
         if (roomScope == null)
             throw new ResourceNotFoundException("Scope for path " + scope.getPath() + " could not be resolved.");
         return roomScope;
+	}
+
+
+
+	@Override
+	public boolean isPlaybackAllowed(IScope scope, String name, int start,	int length, boolean flushPlaylist) 
+	{
+		logger.debug("Stream playback detected " + name + " at scope path "  + scope.getPath());
+		executor.execute(new SubscribeStreamChecker(scope, name));
+		return true;
+	}
+
+
+
+	@Override
+	public boolean isPublishAllowed(IScope scope, String name, String mode)
+	{
+		logger.debug("Stream publish detected " + name + " at scope path "  + scope.getPath());
+		executor.execute(new BroadcastStreamChecker(scope, name));
+		return true;
+	}
+	
+	
+	
+	class BroadcastStreamChecker implements Runnable{
+		
+		IScope scope;
+		IBroadcastScope bs;
+		String name;
+		ClientBroadcastStream stream;
+		int numTries = 6000;
+		
+		public BroadcastStreamChecker(IScope scope, String name){
+			this.scope = scope;
+			this.name = name;
+		}
+		
+		
+		private PropertyChangeListener streamChangeListener = new PropertyChangeListener(){
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) 
+			{
+				logger.info("Stream {} change: {}", name, evt); 
+				
+				String oldVal = String.valueOf(evt.getOldValue());
+				String newVal = String.valueOf(evt.getNewValue());
+				
+				if(oldVal.equalsIgnoreCase("STOPPED") && newVal.equalsIgnoreCase("CLOSED"))
+				{
+					if(stream != null)
+					{
+						logger.info("UnRegistering change listener: {}", name);
+						stream.removeStateChangeListener(streamChangeListener);
+					}
+				}
+				else if(oldVal.equalsIgnoreCase("STARTED") && newVal.equalsIgnoreCase("PUBLISHING"))
+				{
+					streamBroadcastStart(stream);
+				}
+				else if(oldVal.equalsIgnoreCase("PUBLISHING") && newVal.equalsIgnoreCase("STOPPED"))
+				{
+					streamBroadcastClose(stream);
+				}
+			}
+		};
+		
+		
+		public void doCheck(){
+			
+			try
+			{
+				if(numTries <= 0)
+				{
+					throw new Exception("Stream lookup exhausted. Could not find stream");
+				}
+				
+				stream = (ClientBroadcastStream) appAdapter.getBroadcastStream(scope, name);
+				if(stream != null)
+				{
+					logger.debug("Registering change listener: {}", name); 
+					stream.addStateChangeListener(streamChangeListener);
+				}
+				else
+				{
+					Thread.sleep(1);
+					numTries --;
+					doCheck();
+				}
+			}
+			catch(Exception e)
+			{
+				logger.error(e.getMessage());
+			}
+			
+		}
+
+
+		@Override
+		public void run() {
+			doCheck();
+		}
+		
+	}
+	
+	
+	
+	
+	
+	
+class SubscribeStreamChecker implements Runnable{
+		
+		IScope scope;
+		IBroadcastScope bs;
+		String name;
+		ClientBroadcastStream stream;
+		int numTries = 6000;
+		
+		public SubscribeStreamChecker(IScope scope, String name){
+			this.scope = scope;
+			this.name = name;
+		}
+		
+		
+		private IPipeConnectionListener  pipeListener = new IPipeConnectionListener(){
+
+			@Override
+			public void onPipeConnectionEvent(PipeConnectionEvent event) 
+			{
+				
+				if(event.getType().name().contains("CONSUMER_CONNECT"))
+				{
+					streamSubscriberStart(stream);
+				}
+				
+				if(event.getType().name().equalsIgnoreCase("CONSUMER_DISCONNECT"))
+				{
+					if(bs != null)
+					{
+						bs.removePipeConnectionListener(pipeListener);
+						streamSubscriberClose(stream);
+					}
+				}
+				
+			}
+			
+			
+		};
+		
+		
+		public void doCheck(){
+			
+			try
+			{
+				if(numTries <= 0)
+				{
+					throw new Exception("Stream lookup exhausted. Could not find stream");
+				}
+				
+				stream = (ClientBroadcastStream) appAdapter.getBroadcastStream(scope, name);
+				bs = (IBroadcastScope) scope.getBasicScope(ScopeType.BROADCAST, name);
+				if(stream != null)
+				{
+					logger.debug("Registering listener for broadcast scope: {}", name);
+					bs.addPipeConnectionListener(pipeListener);
+				}
+				else
+				{
+					Thread.sleep(1);
+					numTries --;
+					doCheck();
+				}
+			}
+			catch(Exception e)
+			{
+				logger.error(e.getMessage());
+			}
+			
+		}
+
+
+		@Override
+		public void run() {
+			doCheck();
+		}
+		
 	}
 }

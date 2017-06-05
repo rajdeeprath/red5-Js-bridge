@@ -128,4 +128,7 @@ public class Application extends MultiThreadedApplicationAdapter implements IJSB
 	{
 		return "Hello, " + title;
 	}
+
+	
+	
 }
