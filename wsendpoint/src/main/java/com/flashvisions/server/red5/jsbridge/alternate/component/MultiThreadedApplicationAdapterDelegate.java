@@ -4,6 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.concurrent.Executors;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.adapter.IApplication;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
+import org.red5.server.api.IAttributeStore;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.Red5;
@@ -20,6 +22,8 @@ import org.red5.server.api.scope.IBroadcastScope;
 import org.red5.server.api.scope.IScope;
 import org.red5.server.api.scope.ScopeType;
 import org.red5.server.api.so.ISharedObject;
+import org.red5.server.api.so.ISharedObjectBase;
+import org.red5.server.api.so.ISharedObjectListener;
 import org.red5.server.api.stream.IBroadcastStream;
 import org.red5.server.api.stream.IStream;
 import org.red5.server.api.stream.IStreamPlaybackSecurity;
@@ -42,6 +46,8 @@ import com.flashvisions.server.red5.jsbridge.alternate.model.SubscriberStream;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
 import com.flashvisions.server.red5.jsbridge.model.ConnectParamsEvent;
 import com.flashvisions.server.red5.jsbridge.model.ScopeConnectionEvent;
+import com.flashvisions.server.red5.jsbridge.model.SharedObjectSend;
+import com.flashvisions.server.red5.jsbridge.model.SharedObjectUpdate;
 
 public class MultiThreadedApplicationAdapterDelegate implements IApplication, IStreamPublishSecurity, IStreamPlaybackSecurity {
 	
@@ -265,28 +271,28 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	public void streamBroadcastStart(IBroadcastStream stream) {
-		bridge.broadcastApplicationEvent("application.publishStart", this.toBroadcastStream(stream));
+		bridge.broadcastApplicationEvent("stream.publish.start", this.toBroadcastStream(stream));
 	}
 	
 	
 	
 	
 	public void streamBroadcastClose(IBroadcastStream stream) {
-		bridge.broadcastApplicationEvent("application.publishStop", this.toBroadcastStream(stream));
+		bridge.broadcastApplicationEvent("stream.publish.stop", this.toBroadcastStream(stream));
 	}	
 
 	
 	
 	
 	public void streamSubscriberStart(IStream stream) {
-		bridge.broadcastApplicationEvent("application.subscribeStart", this.toStream(stream));
+		bridge.broadcastApplicationEvent("stream.subscribe.start", this.toStream(stream));
 	}
 	
 	
 	
 	
 	public void streamSubscriberClose(IStream stream) {
-		bridge.broadcastApplicationEvent("application.subscribeClose", this.toStream(stream));
+		bridge.broadcastApplicationEvent("stream.subscribe.stop", this.toStream(stream));
 	}
 	
 	
@@ -635,6 +641,48 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
+	public void registerSharedObjectForEvents(SharedObject so) throws ResourceNotFoundException, IOException{
+		
+		IScope target = this.fromScopePath(so.getPath());
+		ISharedObject sharedObject = appAdapter.getSharedObject(target, so.getName());
+		
+		if(sharedObject == null)
+		{
+			logger.info("Shared object not found, creating new..");
+			boolean created = appAdapter.createSharedObject(target, so.getName(), so.isPersistent());
+			if(created)
+			{
+				sharedObject = appAdapter.getSharedObject(target, so.getName());
+			}
+			else
+			{
+				throw new IOException("SharedObject with name " + so.getName() + " could not be created");
+			}
+		}
+		
+		
+		sharedObject.addSharedObjectListener(soListener);
+	}
+	
+	
+	
+	
+	
+	public void unRegisterSharedObjectForEvents(SharedObject so) throws ResourceNotFoundException, IOException{
+		
+		IScope target = this.fromScopePath(so.getPath());
+		ISharedObject sharedObject = appAdapter.getSharedObject(target, so.getName());
+		
+		if(sharedObject != null)
+		{
+			logger.info("Shared object not found, unregistering now..");
+			sharedObject.removeSharedObjectListener(soListener);
+		}		
+	}
+
+	
+	
+	
 	/****************************************************
 	 * 
 	 * RED5-JS UTILITIES
@@ -782,6 +830,101 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
             throw new ResourceNotFoundException("Scope for path " + scope.getPath() + " could not be resolved.");
         return roomScope;
 	}
+	
+	
+	
+	
+	private IScope fromScopePath(String path) throws ResourceNotFoundException {
+		IScope roomScope = ScopeUtils.resolveScope(appScope, path);
+        if (roomScope == null)
+            throw new ResourceNotFoundException("Scope for path " + path + " could not be resolved.");
+        return roomScope;
+	}
+	
+	
+	
+	
+	private ISharedObjectListener soListener = new ISharedObjectListener(){
+
+		@Override
+		public void onSharedObjectConnect(ISharedObjectBase so) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onSharedObjectDisconnect(ISharedObjectBase so) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onSharedObjectUpdate(ISharedObjectBase so, String key,	Object value) {
+			// TODO Auto-generated method stub
+			
+			Map<String, Object> values = new HashMap<String, Object>(); 
+			values.put(key, value);
+			
+			SharedObjectUpdate update = new SharedObjectUpdate();
+			ISharedObject source = (ISharedObject) so;
+			update.setSo(toSharedObject(source));
+			update.setData(values);
+			
+			bridge.broadcastEvent("sharedobject.sync", update);
+		}
+
+		@Override
+		public void onSharedObjectUpdate(ISharedObjectBase so, IAttributeStore values) {
+			// TODO Auto-generated method stub
+			
+			SharedObjectUpdate update = new SharedObjectUpdate();
+			ISharedObject source = (ISharedObject) so;
+			update.setSo(toSharedObject(source));
+			update.setData(values.getAttributes());
+			
+			
+			bridge.broadcastEvent("sharedobject.sync", update);
+		}
+
+		@Override
+		public void onSharedObjectUpdate(ISharedObjectBase so,	Map<String, Object> values) 
+		{
+			// TODO Auto-generated method stub
+			SharedObjectUpdate update = new SharedObjectUpdate();
+			ISharedObject source = (ISharedObject) so;
+			update.setSo(toSharedObject(source));
+			update.setData(values);
+			
+			bridge.broadcastEvent("sharedobject.sync", update);
+		}
+
+		
+		@Override
+		public void onSharedObjectDelete(ISharedObjectBase so, String key) {
+			// TODO Auto-generated method stub
+			logger.info("Shared object property deleted " + key);
+		}
+
+		
+		@Override
+		public void onSharedObjectClear(ISharedObjectBase so) {
+			// TODO Auto-generated method stub
+			logger.info("Shared object cleared");
+		}
+
+		
+		@Override
+		public void onSharedObjectSend(ISharedObjectBase so, String method, List<?> params) {
+			// TODO Auto-generated method stub
+			SharedObjectSend cmi = new SharedObjectSend();
+			cmi.setMethod(method);
+			cmi.setParams(params);
+			
+			bridge.broadcastEvent("sharedobject.send", cmi);
+		}
+		
+	};
+	
 
 
 
