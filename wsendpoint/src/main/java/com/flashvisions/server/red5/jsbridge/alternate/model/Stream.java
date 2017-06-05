@@ -12,8 +12,6 @@ public class Stream {
 	
 	String scopePath;
 	
-	int buffer;
-	
 	String broadcastStreamPublishName;
 
 	
@@ -56,14 +54,6 @@ public class Stream {
 
 	public void setStreamId(String streamId) {
 		this.streamId = streamId;
-	}
-
-	public int getBuffer() {
-		return buffer;
-	}
-
-	public void setBuffer(int buffer) {
-		this.buffer = buffer;
 	}
 
 	public String getBroadcastStreamPublishName() {

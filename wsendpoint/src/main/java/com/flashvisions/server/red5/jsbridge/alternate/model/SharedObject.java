@@ -7,7 +7,7 @@ public class SharedObject {
 	
 	String name;
 	
-	String version;
+	int version;
 	
 	boolean persistent;
 	
@@ -34,11 +34,11 @@ public class SharedObject {
 		this.name = name;
 	}
 
-	public String getVersion() {
+	public int getVersion() {
 		return version;
 	}
 
-	public void setVersion(String version) {
+	public void setVersion(int version) {
 		this.version = version;
 	}
 
