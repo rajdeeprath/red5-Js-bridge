@@ -641,6 +641,14 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
+	public void sendOverSharedObject(SharedObject so, String method, List<?> params) throws ResourceNotFoundException, IOException
+	{
+		ISharedObject object = fromSharedObject(so);
+		object.setAttribute(method, params);
+	}
+	
+	
+	
 	public void registerSharedObjectForEvents(SharedObject so) throws ResourceNotFoundException, IOException{
 		
 		IScope target = this.fromScopePath(so.getPath());
@@ -754,6 +762,33 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		alias.setData(so.getData());
 		
 		return alias;
+	}
+	
+	
+	
+	
+	
+	private ISharedObject fromSharedObject(SharedObject so) throws ResourceNotFoundException, IOException 
+	{
+		ISharedObject object = appAdapter.getSharedObject(appScope, so.getName());
+		IScope scope = this.fromScopePath(so.getPath());
+		
+		if(object == null)
+		{
+			logger.info("Shared object not found, creating new..");
+			boolean created = appAdapter.createSharedObject(scope, so.getName(), so.isPersistent());
+			if(created)
+			{
+				object = appAdapter.getSharedObject(scope, so.getName());
+			}
+			else
+			{
+				throw new IOException("SharedObject with name " + so.getName() + " could not be created");
+			}
+		}
+		
+		
+		return object;
 	}
 	
 	
