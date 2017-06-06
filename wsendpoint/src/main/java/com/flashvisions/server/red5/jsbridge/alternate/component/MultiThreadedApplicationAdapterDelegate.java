@@ -271,28 +271,28 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	public void streamBroadcastStart(IBroadcastStream stream) {
-		bridge.broadcastApplicationEvent("stream.publish.start", this.toBroadcastStream(stream));
+		bridge.broadcastApplicationEvent("stream.publishStart", this.toBroadcastStream(stream));
 	}
 	
 	
 	
 	
 	public void streamBroadcastClose(IBroadcastStream stream) {
-		bridge.broadcastApplicationEvent("stream.publish.stop", this.toBroadcastStream(stream));
+		bridge.broadcastApplicationEvent("stream.publishStop", this.toBroadcastStream(stream));
 	}	
 
 	
 	
 	
 	public void streamSubscriberStart(IStream stream) {
-		bridge.broadcastApplicationEvent("stream.subscribe.start", this.toStream(stream));
+		bridge.broadcastApplicationEvent("stream.subscribeStart", this.toStream(stream));
 	}
 	
 	
 	
 	
 	public void streamSubscriberClose(IStream stream) {
-		bridge.broadcastApplicationEvent("stream.subscribe.stop", this.toStream(stream));
+		bridge.broadcastApplicationEvent("stream.subscribeStop", this.toStream(stream));
 	}
 	
 	
