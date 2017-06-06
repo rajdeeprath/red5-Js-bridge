@@ -30,8 +30,11 @@
   },
   "homepage": "https://github.com/rajdeeprath/red5-js-bridge#readme",
   "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-env": "^1.5.1",
     "browserify": "latest",
     "gulp": "latest",
+    "gulp-babel": "^6.1.2",
     "gulp-browserify": "^0.5.1",
     "gulp-compile-handlebars": "^0.6.1",
     "gulp-concat": "latest",

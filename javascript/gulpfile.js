@@ -5,6 +5,7 @@ var gulp = require('gulp');
 var mkdir = require('mkdirp');
 var browserify = require('gulp-browserify');
 var rename = require('gulp-rename');
+var babel = require("gulp-babel");
 
 var handlebars = require('gulp-compile-handlebars');
 var pkg = path.join(__dirname, 'package.json');
@@ -20,9 +21,19 @@ var defaultOptions = {
 
 mkdir.sync(buildDirectory);
 
+
+gulp.task('babelify', function (cb) {
+    gulp.src('./src/client/index.js')
+        .pipe(babel())
+        .pipe(gulp.dest(buildDirectory))
+        .on('end', cb);
+});
+
+
 gulp.task('browserify-dependencies', function (cb) {
  
     gulp.src('./src/client/index.js')
+        .pipe(babel())
         .pipe(browserify({
           insertGlobals : true
         }))
@@ -51,7 +62,7 @@ gulp.task('move-scripts', ['compile'], function (cb) {
 });
 
 
-gulp.task('build', ['compile', 'browserify-dependencies', 'move-scripts'], function (cb) {
+gulp.task('build', ['compile', 'babelify', 'browserify-dependencies', 'move-scripts'], function (cb) {
   cb();
 });
 
