@@ -6,8 +6,6 @@ var mkdir = require('mkdirp');
 var browserify = require('gulp-browserify');
 var rename = require('gulp-rename');
 var babel = require("gulp-babel");
-
-var handlebars = require('gulp-compile-handlebars');
 var pkg = path.join(__dirname, 'package.json');
 var version = require(pkg).version;
 
@@ -42,18 +40,8 @@ gulp.task('browserify-dependencies', function (cb) {
 });
 
 
-gulp.task('compile', function (cb) {
 
-  gulp.src(path.join(sourceDirectory, 'client', '**', '*.html'))
-    .pipe(handlebars({
-      version: version
-    }, defaultOptions))
-    .pipe(gulp.dest(buildDirectory))
-    .on('end', cb);
-
-});
-
-gulp.task('move-scripts', ['compile'], function (cb) {
+gulp.task('move-scripts', function (cb) {
 
   gulp.src(path.join(sourceDirectory, 'client', '**', '*.js'))
     .pipe(gulp.dest(buildDirectory))
@@ -62,7 +50,7 @@ gulp.task('move-scripts', ['compile'], function (cb) {
 });
 
 
-gulp.task('build', ['compile', 'babelify', 'browserify-dependencies', 'move-scripts'], function (cb) {
+gulp.task('build', ['babelify', 'browserify-dependencies', 'move-scripts'], function (cb) {
   cb();
 });
 

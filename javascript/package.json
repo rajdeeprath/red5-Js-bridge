@@ -36,18 +36,10 @@
     "gulp": "latest",
     "gulp-babel": "^6.1.2",
     "gulp-browserify": "^0.5.1",
-    "gulp-compile-handlebars": "^0.6.1",
     "gulp-concat": "latest",
     "gulp-rename": "^1.2.2",
-    "gulp-uglify": "latest",
     "gulp-util": "latest",
-    "jquery": "^3.2.1",
-    "jsdom": "^11.0.0",
     "promise": "^7.1.1",
-    "type-check": "^0.3.2",
-    "vinyl-source-stream": "latest"
-  },
-  "dependencies": {
-    "hashids": "^1.1.1"
+    "type-check": "^0.3.2"
   }
 }
