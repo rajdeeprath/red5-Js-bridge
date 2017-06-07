@@ -3,6 +3,7 @@ let Red5JsBridge = (function () {
 let defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
 
 const EventEmitter = require('events');  
+const Promise = require('promise');
 const typeCheck = require('type-check').typeCheck;
     
 class Red5JsBridge extends EventEmitter {
@@ -35,7 +36,6 @@ class Red5JsBridge extends EventEmitter {
             } 
 
             
-            
             /* Listen for events */
             this.on("session.id", function(id){
                 if(this.options.debug) {
@@ -43,6 +43,7 @@ class Red5JsBridge extends EventEmitter {
                 }
                 
                 this._sessionId = id;
+                this.emit("bridge.ready", this.sessionId);
             });
             
             this.on("session.closing", function(reason){
@@ -311,10 +312,6 @@ class Red5JsBridge extends EventEmitter {
 
             parameters.forEach(function (param) {
 
-                    if(options.debug) {
-                        console.log("processing " + param);
-                    }
-
                     if(typeCheck('String', param)) 
                     {
                         try 
@@ -377,7 +374,7 @@ class Red5JsBridge extends EventEmitter {
                 this._messageCounter = 0;
             }
 
-            return getSessionId() + "-" + (this._messageCounter++);
+            return this._sessionId + "-" + (this._messageCounter++);
         }
 
 
@@ -389,7 +386,7 @@ class Red5JsBridge extends EventEmitter {
         */
         _createRMIRequest(method, parameters) {
             var packet = {};
-            packet.id = _generateUniqueId();
+            packet.id = this._generateUniqueId();
             packet.timestamp = new Date().getTime();
             packet.type = "RMI";
             packet.method = method;
@@ -405,26 +402,28 @@ class Red5JsBridge extends EventEmitter {
         * Raw send via websocket
         */
         _send(request) {
+            
+            var that = this;
 
              return new Promise(function(resolve, reject) {
 
                 var requestId = request.id;
 
-                if (this._connected) 
+                if (that._connected) 
                 {
 
                     // Storing reference to resolve and reject
-                    this._rmiPromises[requestId] = {
+                    that._rmiPromises[requestId] = {
                         resolve: resolve,
                         reject: reject,
                         time: request.timestamp
                     };
 
-                    if(this.options.debug){
+                    if(that.options.debug){
                         console.log("Sending request " +  request);
                     }
-
-                    this._ws.send(JSON.stringify(request));
+                    
+                    that._ws.send(JSON.stringify(request));
                 } 
                 else 
                 {
@@ -503,4 +502,15 @@ class Red5JsBridge extends EventEmitter {
 
 
 var bridge = new Red5JsBridge();
+bridge.on('bridge.ready', function(id){
+    console.log("bridge - ready");
+    
+    bridge.invoke('greet', "rajdeep")
+    .then(function(result){
+      console.log("result =>" + result);  
+    })
+    .catch(function(error){
+      console.log("error =>" + error);  
+    })
+});
 bridge.connect();
