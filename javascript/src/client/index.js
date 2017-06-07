@@ -499,11 +499,15 @@ class Red5JsBridge extends EventEmitter {
 
 
 
+/ ********************************************************************* /
 
 
-var bridge = new Red5JsBridge();
+
+
+
+var bridge = new Red5JsBridge({debug: false});
 bridge.on('bridge.ready', function(id){
-    console.log("bridge - ready");
+    console.log("bridge - ready " + id);
     
     bridge.invoke('greet', "rajdeep")
     .then(function(result){
