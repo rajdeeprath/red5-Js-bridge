@@ -499,13 +499,40 @@ class Red5JsBridge extends EventEmitter {
 
 
 
-/ ********************************************************************* /
+/*********************************************************************/
+
+
+class Red5JsBridgedApplication extends Red5JsBridge {
+    
+    constructor(opts) {
+        super(opts);
+    }
+    
+}
 
 
 
 
 
+/*
 var bridge = new Red5JsBridge({debug: false});
+bridge.on('bridge.ready', function(id){
+    console.log("bridge - ready " + id);
+    
+    bridge.invoke('greet', "rajdeep")
+    .then(function(result){
+      console.log("result =>" + result);  
+    })
+    .catch(function(error){
+      console.log("error =>" + error);  
+    })
+});
+bridge.connect();
+*/
+    
+    
+    
+var bridge = new Red5JsBridgedApplication({debug: false});
 bridge.on('bridge.ready', function(id){
     console.log("bridge - ready " + id);
     
