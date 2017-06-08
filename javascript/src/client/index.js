@@ -365,6 +365,11 @@ class Red5JsBridge extends EventEmitter {
                             }
                         }                    
                     }
+                    else
+                    {
+                        //throw new Error("Unknown parameter type");
+                        processedParameters.push(param);
+                    }
             });
 
 
@@ -564,6 +569,32 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     getConnection(id) {
         var method = "getConnection";
         var parameters = [id];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Get connection attributes
+    */
+    getAtrributes(connection) {
+        var method = "getAtrributes";
+        var parameters = [connection.sessionId];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Set connection attribute
+    */
+    addAtrribute(connection, key, value) {
+        var method = "addAtrribute";
+        var parameters = [connection.sessionId, key, value];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -878,6 +909,14 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
                                           
     "appConnect" : function(connection, params) {
         console.log("appConnect");
+        
+        bridge.addAtrribute(connection, "time", new Date().getTime())
+        .then(function(result){
+            console.log("result " + JSON.stringify(result));
+        })
+        .catch(function(err){
+            console.log("err");
+        });
     },                                        
                                           
     "appJoin" : function(connection, scope) {
@@ -933,12 +972,5 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
 
 bridge.on('bridge.ready', function(id){
     console.log("bridge - ready " + id);
-    
-    bridge.getConnection("5A8X6GZV4BYX2").then(function(result){
-      console.log("result =>" + result.length);  
-    })
-    .catch(function(error){
-      console.log("error =>" + error);  
-    })
 });
 bridge.connect();

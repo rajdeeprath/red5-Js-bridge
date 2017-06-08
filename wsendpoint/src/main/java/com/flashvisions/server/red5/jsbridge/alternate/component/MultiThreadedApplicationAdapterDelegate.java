@@ -514,43 +514,43 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
-	public boolean addAtrributes(Connection conn, Map<String, Object> attribute) throws Exception {
-		IConnection connection = this.getConnectionById(conn.getSessionId());
+	public boolean addAtrributes(String sessionId, Map<String, Object> attribute) throws Exception {
+		IConnection connection = this.getConnectionById(sessionId);
 		return connection.setAttributes(attribute);
 	}
 	
 	
 	
-	public boolean addAtrribute(Connection conn, String name, Object value) throws Exception {
-		IConnection connection = this.getConnectionById(conn.getSessionId());
+	public boolean addAtrribute(String sessionId, String name, Object value) throws Exception {
+		IConnection connection = this.getConnectionById(sessionId);
 		return connection.setAttribute(name, value);
 	}
 	
 	
 	
-	public Map<String, Object> getAtrributes(Connection conn) throws Exception {
-		IConnection connection = this.getConnectionById(conn.getSessionId());
+	public Map<String, Object> getAtrributes(String sessionId) throws Exception {
+		IConnection connection = this.getConnectionById(sessionId);
 		return connection.getAttributes();
 	}
 	
 	
 	
-	public Object getAtrribute(Connection conn, String name) throws Exception {
-		IConnection connection = this.getConnectionById(conn.getSessionId());
+	public Object getAtrribute(String sessionId, String name) throws Exception {
+		IConnection connection = this.getConnectionById(sessionId);
 		return connection.getAttribute(name);
 	}
 	
 	
 	
-	public void disconnect(Connection conn) throws Exception {
-		IConnection connection = this.getConnectionById(conn.getSessionId());
+	public void disconnect(String sessionId) throws Exception {
+		IConnection connection = this.getConnectionById(sessionId);
 		connection.close();
 	}
 	
 	
 	
-	public void ping(Connection conn) throws Exception {
-		IConnection connection = this.getConnectionById(conn.getSessionId());
+	public void ping(String sessionId) throws Exception {
+		IConnection connection = this.getConnectionById(sessionId);
 		connection.ping();
 	}
 	
