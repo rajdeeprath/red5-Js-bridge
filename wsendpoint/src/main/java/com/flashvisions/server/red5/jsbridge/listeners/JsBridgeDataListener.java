@@ -113,6 +113,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 		final JsBridgeConnection bridgeConnection = ConnectionManager.createBridgeConnectionObject(conn);
 		connManager.addConnection(bridgeConnection);
 		
+		
 		threadedExecutor.execute(new Runnable(){
 
 			@Override
@@ -191,13 +192,13 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	
 	
 	@Override
-	public void broadcastApplicationEvent(String event, Object data) 
+	public void broadcastEvent(JsBridgeConnection target, String event, Object data) 
 	{
 		OutGoingMessage message = new OutGoingMessage();
 		message.setType(BridgeMessageType.EVENT);
 		message.setStatus(MessageStatus.DATA);
 		message.setData(new EventMessage(event, data)); // some how pack =>  close as special event
-		connManager.sendApplicationEvents(message);
+		connManager.sendToConnection(target.getSignalChannel(), message);
 	}
 
 	
@@ -278,7 +279,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	            appAdapter = (MultiThreadedApplicationAdapter) applicationContext.getBean("web.handler");
 	            logger.debug("Linked to app: {}", appAdapter);
 	            
-	            MultiThreadedApplicationAdapterDelegate delegate = new MultiThreadedApplicationAdapterDelegate(this, appAdapter);
+	    		MultiThreadedApplicationAdapterDelegate delegate = new MultiThreadedApplicationAdapterDelegate(this, appAdapter);
 	            delegate.initialize();
 	     } 
 		 else 

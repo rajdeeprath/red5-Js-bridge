@@ -44,6 +44,7 @@ import com.flashvisions.server.red5.jsbridge.alternate.model.SharedObject;
 import com.flashvisions.server.red5.jsbridge.alternate.model.Stream;
 import com.flashvisions.server.red5.jsbridge.alternate.model.SubscriberStream;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
+import com.flashvisions.server.red5.jsbridge.listeners.JsBridgeConnection;
 import com.flashvisions.server.red5.jsbridge.model.ConnectParamsEvent;
 import com.flashvisions.server.red5.jsbridge.model.ScopeConnectionEvent;
 import com.flashvisions.server.red5.jsbridge.model.SharedObjectSend;
@@ -51,10 +52,12 @@ import com.flashvisions.server.red5.jsbridge.model.SharedObjectUpdate;
 
 public class MultiThreadedApplicationAdapterDelegate implements IApplication, IStreamPublishSecurity, IStreamPlaybackSecurity {
 	
-	private static final Logger logger = Red5LoggerFactory.getLogger(MultiThreadedApplicationAdapterDelegate.class, "red5-js-bridge");
+	private static final Logger logger = Red5LoggerFactory.getLogger(MultiThreadedApplicationAdapterDelegate.class,"red5-js-bridge");
 
 	
 	IJsBridge bridge;
+	
+	JsBridgeConnection bridgeConnection;
 	
 	MultiThreadedApplicationAdapter appAdapter;
 	
@@ -82,8 +85,17 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
+	public MultiThreadedApplicationAdapterDelegate(IJsBridge bridge, MultiThreadedApplicationAdapter appAdapter, JsBridgeConnection bridgeConnection){
+		this.bridge = bridge;
+		this.appAdapter = appAdapter;	
+		this.bridgeConnection = bridgeConnection;
+	}
+	
+	
+	
 	public void initialize(){
 		this.appScope = this.appAdapter.getScope();
+		this.appAdapter.addListener(this);
 		this.appAdapter.registerStreamPublishSecurity(this);
 		this.appAdapter.registerStreamPlaybackSecurity(this);
 		
@@ -121,7 +133,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	@Override
 	public boolean appStart(IScope app) {
 		// TODO Auto-generated method stub
-		bridge.broadcastApplicationEvent("application.appStart", null);
+		bridge.broadcastEvent("application.appStart", this.toScope(app));
 		return true;
 	}
 
@@ -130,14 +142,22 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	@Override
 	public boolean appConnect(IConnection conn, Object[] params) {
-		// TODO Auto-generated method stub
 		
-		Connection connection = toConnection(conn);
-		ConnectParamsEvent notification = new ConnectParamsEvent();
-		notification.setConnection(connection);
-		notification.setParams(params);
 		
-		bridge.broadcastApplicationEvent("application.appConnect", notification);
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				
+				ConnectParamsEvent notification = new ConnectParamsEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setParams(params);
+				
+				bridge.broadcastEvent("application.appConnect", notification);
+			}
+			
+		});
+		
 		return true;
 	}
 
@@ -146,14 +166,23 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	@Override
 	public boolean appJoin(IClient client, IScope app) {
-		// TODO Auto-generated method stub
+		
 		IConnection conn = Red5.getConnectionLocal();
 		
-		ScopeConnectionEvent notification = new ScopeConnectionEvent();
-		notification.setConnection(toConnection(conn));
-		notification.setScope(this.toScope(app));
-		
-		bridge.broadcastApplicationEvent("application.appJoin", notification);
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				
+				ScopeConnectionEvent notification = new ScopeConnectionEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setScope(toScope(app));
+				
+				bridge.broadcastEvent("application.appJoin", notification);
+			}
+			
+		});
+
 		return true;
 	}
 
@@ -163,7 +192,17 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	@Override
 	public void appDisconnect(IConnection conn) {
 		// TODO Auto-generated method stub
-		bridge.broadcastApplicationEvent("application.appDisconnect", this.toConnection(conn));
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				
+				bridge.broadcastEvent("application.appDisconnect", toConnection(conn));
+			}
+			
+		});
+		
 		
 	}
 
@@ -172,14 +211,22 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	@Override
 	public void appLeave(IClient client, IScope app) {
-		// TODO Auto-generated method stub
+		
 		IConnection conn = Red5.getConnectionLocal();
 		
-		ScopeConnectionEvent notification = new ScopeConnectionEvent();
-		notification.setConnection(toConnection(conn));
-		notification.setScope(this.toScope(app));
-		
-		bridge.broadcastApplicationEvent("application.appLeave", notification);
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				
+				ScopeConnectionEvent notification = new ScopeConnectionEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setScope(toScope(app));
+				
+				bridge.broadcastEvent("application.appLeave", notification);
+			}
+			
+		});
 	}
 
 	
@@ -188,7 +235,20 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	@Override
 	public void appStop(IScope app) {
 		// TODO Auto-generated method stub
-		bridge.broadcastApplicationEvent("application.appStop", this.toScope(app));
+		
+		IConnection conn = Red5.getConnectionLocal();
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				
+				bridge.broadcastEvent("application.appStop", toScope(app));
+			}
+			
+		});
+		
+
 		executor.shutdown();
 	}
 
@@ -197,8 +257,17 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	@Override
 	public boolean roomStart(IScope room) {
-		// TODO Auto-generated method stub
-		bridge.broadcastApplicationEvent("application.roomStart", this.toScope(room));
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				
+				bridge.broadcastEvent("application.roomStart", toScope(room));
+			}
+			
+		});
+		
 		return true;
 	}
 
@@ -207,14 +276,24 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	@Override
 	public boolean roomConnect(IConnection conn, Object[] params) {
-		// TODO Auto-generated method stub
 		
-		Connection connection = toConnection(conn);
-		ConnectParamsEvent notification = new ConnectParamsEvent();
-		notification.setConnection(connection);
-		notification.setParams(params);
 		
-		bridge.broadcastApplicationEvent("application.roomConnect", notification);
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				
+				Connection connection = toConnection(conn);
+				ConnectParamsEvent notification = new ConnectParamsEvent();
+				notification.setConnection(connection);
+				notification.setParams(params);
+				
+				bridge.broadcastEvent("application.roomConnect", notification);
+			}
+			
+		});
+		
+		
 		return true;
 	}
 
@@ -226,11 +305,22 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		// TODO Auto-generated method stub
 		IConnection conn = Red5.getConnectionLocal();
 		
-		ScopeConnectionEvent notification = new ScopeConnectionEvent();
-		notification.setConnection(toConnection(conn));
-		notification.setScope(this.toScope(room));
 		
-		bridge.broadcastApplicationEvent("application.roomJoin", null);
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				
+				ScopeConnectionEvent notification = new ScopeConnectionEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setScope(toScope(room));
+				
+				bridge.broadcastEvent("application.roomJoin", notification);
+				
+			}
+			
+		});
+		
 		return true;
 	}
 
@@ -239,8 +329,15 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	@Override
 	public void roomDisconnect(IConnection conn) {
-		// TODO Auto-generated method stub
-		bridge.broadcastApplicationEvent("application.roomDisconnect", this.toConnection(conn));
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				bridge.broadcastEvent("application.roomDisconnect", toConnection(conn));
+			}
+			
+		});
 	}
 
 	
@@ -248,14 +345,24 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	@Override
 	public void roomLeave(IClient client, IScope room) {
-		// TODO Auto-generated method stub
+		
 		IConnection conn = Red5.getConnectionLocal();
 		
-		ScopeConnectionEvent notification = new ScopeConnectionEvent();
-		notification.setConnection(toConnection(conn));
-		notification.setScope(this.toScope(room));
 		
-		bridge.broadcastApplicationEvent("application.roomLeave", notification);
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				ScopeConnectionEvent notification = new ScopeConnectionEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setScope(toScope(room));
+				
+				bridge.broadcastEvent("application.roomLeave", notification);
+			}
+			
+		});
+		
+		
 	}
 
 	
@@ -263,36 +370,76 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	@Override
 	public void roomStop(IScope room) {
-		// TODO Auto-generated method stub
-		bridge.broadcastApplicationEvent("application.roomStop", this.toScope(room));
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				bridge.broadcastEvent("application.roomStop", toScope(room));
+			}
+			
+		});
 	}
 	
 	
 	
 	
 	public void streamBroadcastStart(IBroadcastStream stream) {
-		bridge.broadcastApplicationEvent("stream.publishStart", this.toBroadcastStream(stream));
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				bridge.broadcastEvent("stream.publishStart", toBroadcastStream(stream));
+			}
+			
+		});
+		
 	}
 	
 	
 	
 	
 	public void streamBroadcastClose(IBroadcastStream stream) {
-		bridge.broadcastApplicationEvent("stream.publishStop", this.toBroadcastStream(stream));
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				bridge.broadcastEvent("stream.publishStop", toBroadcastStream(stream));
+			}
+			
+		});
 	}	
 
 	
 	
 	
 	public void streamSubscriberStart(IStream stream) {
-		bridge.broadcastApplicationEvent("stream.subscribeStart", this.toStream(stream));
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				bridge.broadcastEvent("stream.subscribeStart", toStream(stream));
+			}
+			
+		});
 	}
 	
 	
 	
 	
 	public void streamSubscriberClose(IStream stream) {
-		bridge.broadcastApplicationEvent("stream.subscribeStop", this.toStream(stream));
+		
+		executor.execute(new Runnable(){
+
+			@Override
+			public void run() {
+				bridge.broadcastEvent("stream.subscribeStop", toStream(stream));
+			}
+		});
+		
 	}
 	
 	
@@ -515,7 +662,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 			else
 			{
-				throw new IOException("SharedObject with name " + name + " could not be created");
+				throw new IOException("SharedObject with name" + name +" could not be created");
 			}
 		}
 		
@@ -542,7 +689,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 			else
 			{
-				throw new IOException("SharedObject with name " + name + " could not be created");
+				throw new IOException("SharedObject with name" + name +" could not be created");
 			}
 		}
 		
@@ -569,7 +716,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 			else
 			{
-				throw new IOException("SharedObject with name " + name + " could not be created");
+				throw new IOException("SharedObject with name" + name +" could not be created");
 			}
 		}
 		
@@ -596,7 +743,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 			else
 			{
-				throw new IOException("SharedObject with name " + name + " could not be created");
+				throw new IOException("SharedObject with name" + name +" could not be created");
 			}
 		}
 		
@@ -664,7 +811,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 			else
 			{
-				throw new IOException("SharedObject with name " + so.getName() + " could not be created");
+				throw new IOException("SharedObject with name" + so.getName() +" could not be created");
 			}
 		}
 		
@@ -783,7 +930,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 			else
 			{
-				throw new IOException("SharedObject with name " + so.getName() + " could not be created");
+				throw new IOException("SharedObject with name" + so.getName() +" could not be created");
 			}
 		}
 		
@@ -851,7 +998,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		alias.setDepth(scope.getDepth());
 		alias.setValid(scope.isValid());
 		alias.setType(scope.getType().name());
-		alias.setAttributes(scope.getAttributes());
+		//alias.setAttributes(scope.getAttributes());
 		
 		return alias;
 	}
@@ -862,7 +1009,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	private IScope fromScope(Scope scope) throws ResourceNotFoundException {
 		IScope roomScope = ScopeUtils.resolveScope(appScope, scope.getPath());
         if (roomScope == null)
-            throw new ResourceNotFoundException("Scope for path " + scope.getPath() + " could not be resolved.");
+            throw new ResourceNotFoundException("Scope for path" + scope.getPath() +" could not be resolved.");
         return roomScope;
 	}
 	
@@ -872,7 +1019,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	private IScope fromScopePath(String path) throws ResourceNotFoundException {
 		IScope roomScope = ScopeUtils.resolveScope(appScope, path);
         if (roomScope == null)
-            throw new ResourceNotFoundException("Scope for path " + path + " could not be resolved.");
+            throw new ResourceNotFoundException("Scope for path" + path +" could not be resolved.");
         return roomScope;
 	}
 	
@@ -937,7 +1084,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		@Override
 		public void onSharedObjectDelete(ISharedObjectBase so, String key) {
 			// TODO Auto-generated method stub
-			logger.info("Shared object property deleted " + key);
+			logger.info("Shared object property deleted" + key);
 		}
 
 		
@@ -966,7 +1113,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	@Override
 	public boolean isPlaybackAllowed(IScope scope, String name, int start,	int length, boolean flushPlaylist) 
 	{
-		logger.debug("Stream playback detected " + name + " at scope path "  + scope.getPath());
+		logger.debug("Stream playback detected" + name +" at scope path "  + scope.getPath());
 		executor.execute(new SubscribeStreamChecker(scope, name));
 		return true;
 	}
@@ -976,7 +1123,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	@Override
 	public boolean isPublishAllowed(IScope scope, String name, String mode)
 	{
-		logger.debug("Stream publish detected " + name + " at scope path "  + scope.getPath());
+		logger.debug("Stream publish detected" + name +" at scope path "  + scope.getPath());
 		executor.execute(new BroadcastStreamChecker(scope, name));
 		return true;
 	}

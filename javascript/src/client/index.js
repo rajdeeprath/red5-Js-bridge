@@ -463,9 +463,6 @@ class Red5JsBridge extends EventEmitter {
         */
         destroy(){
 
-            //stopRMIRegistryMonitor();
-
-
             if(this._ws) {           
                 if(this._connected) {
                     this._ws.close();
@@ -489,26 +486,308 @@ class Red5JsBridge extends EventEmitter {
             
             this.sessionId = undefined
         }
-
-    
+        
 }
     
     
     return Red5JsBridge;
+                    
 })();
 
 
 
-/*********************************************************************/
-
 
 class Red5JsBridgedApplication extends Red5JsBridge {
-    
-    constructor(opts) {
+
+    constructor(opts, handler) {
         super(opts);
+
+        this._appHandler = undefined;
+
+        if(handler){
+            this._appHandler = handler;
+        }
+
+
+        this._handleApplicationAdpterEvents();               
+
     }
-    
+
+
+
+
+
+    /*
+    * Handling application adapter events
+    */
+    _handleApplicationAdpterEvents() {
+        
+        const appHandler = this._appHandler;
+        const that = this;
+        
+        /* Listen for application events */
+        this.on("application.appStart", function(data){
+            if(this.options.debug) {
+                console.log("Application started.");
+            }
+            
+            const scope = data;
+            
+            if(appHandler) {
+                let fn = appHandler.appStart;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, scope);
+                } 
+            }
+        });
+
+        this.on("application.appConnect", function(data){
+            if(that.options.debug) {
+                console.log("appConnect");
+            }
+            
+            const connection = data.connection;
+            const params = data.params;
+            
+            if(appHandler) {
+                let fn = appHandler.appConnect;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, connection, params);
+                } 
+            }
+        });
+
+        this.on("application.appJoin", function(data){
+            if(that.options.debug) {
+                console.log("appJoin");
+            }
+            
+            const connection = data.connection;
+            const scope = data.scope;
+            
+            if(appHandler) {
+                let fn = appHandler.appJoin;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, connection, scope);
+                } 
+            }
+        });
+
+
+        this.on("application.appDisconnect", function(data){
+            if(that.options.debug) {
+                console.log("appDisconnect");
+            }
+            
+            const connection = data;
+            
+            if(appHandler) {
+                let fn = appHandler.appDisconnect;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, connection);
+                } 
+            }
+        });
+        
+
+        this.on("application.appLeave", function(data){
+            if(that.options.debug) {
+                console.log("appLeave");
+            }
+            
+            const connection = data.connection;
+            const scope = data.scope;
+            
+            if(appHandler) {
+                let fn = appHandler.appLeave;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, connection, scope);
+                } 
+            }
+        });
+
+
+        this.on("application.appStop", function(data){
+            if(that.options.debug) {
+                console.log("appStop");
+            }
+            
+            const scope = data;
+            
+            if(appHandler) {
+                let fn = appHandler.appStop;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, scope);
+                } 
+            }
+        });
+
+
+        this.on("application.roomStart", function(data){
+            if(that.options.debug) {
+                console.log("roomStart");
+            }
+            
+            const scope = data;            
+            
+            if(appHandler) {
+                let fn = appHandler.roomStart;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, scope);
+                } 
+            }
+        });
+
+
+        this.on("application.roomConnect", function(data){
+            if(that.options.debug) {
+                console.log("roomConnect");
+            }
+            
+            const connection = data.connection;
+            const params = data.params;
+            
+            if(appHandler) {
+                let fn = appHandler.roomConnect;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, connection, params);
+                } 
+            }
+        });
+
+
+        this.on("application.roomJoin", function(data){
+            if(that.options.debug) {
+                console.log("roomJoin");
+            }
+            
+            const connection = data.connection;
+            const scope = data.scope;
+            
+            if(appHandler) {
+                let fn = appHandler.roomJoin;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, connection, scope);
+                } 
+            }
+        });
+
+
+        this.on("application.roomDisconnect", function(data){
+            if(that.options.debug) {
+                console.log("roomDisconnect");
+            }
+            
+            const connection = data;
+            
+            if(appHandler) {
+                let fn = appHandler.roomDisconnect;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, connection);
+                } 
+            }
+        });
+
+
+        this.on("application.roomLeave", function(data){
+            if(that.options.debug) {
+                console.log("roomLeave");
+            }            
+            
+            const connection = data.connection;
+            const scope = data.scope;
+            
+            if(appHandler) {
+                let fn = appHandler.roomLeave;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, connection, scope);
+                } 
+            }
+        });
+
+
+        this.on("application.roomStop", function(data){
+            if(that.options.debug) {
+                console.log("roomStop");
+            }
+            
+            const scope = data;
+            
+            if(appHandler) {
+                let fn = appHandler.roomStop;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, scope);
+                } 
+            }
+        });
+        
+        
+        this.on("stream.publishStart", function(data){
+            if(that.options.debug) {
+                console.log("publishStart");
+            }
+            
+            const stream = data;            
+            
+            if(appHandler) {
+                let fn = appHandler.streamBroadcastStart;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, stream);
+                } 
+            }
+        });
+        
+        
+        this.on("stream.publishStop", function(data){
+            if(that.options.debug) {
+                console.log("publishStop");
+            }
+            
+            const stream = data;            
+            
+            if(appHandler) {
+                let fn = appHandler.streamBroadcastClose;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, stream);
+                } 
+            }
+        });
+        
+        
+        this.on("stream.subscribeStart", function(data){
+            if(that.options.debug) {
+                console.log("subscribeStart");
+            }
+            
+            const stream = data;
+            
+            if(appHandler) {
+                let fn = appHandler.streamSubscriberStart;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, stream);
+                } 
+            }
+        });
+        
+        
+        this.on("stream.subscribeStop", function(data){
+            if(that.options.debug) {
+                console.log("subscribeStop");
+            }
+            
+            const stream = data;
+            
+            if(appHandler) {
+                let fn = appHandler.streamSubscriberClose;
+                if(typeof fn === 'function') {
+                    fn.call(appHandler, stream);
+                } 
+            }
+        });
+    }
+
 }
+
 
 
 
@@ -532,7 +811,7 @@ bridge.connect();
     
     
     
-var bridge = new Red5JsBridgedApplication({debug: false});
+var bridge = new Red5JsBridgedApplication({debug: true});
 bridge.on('bridge.ready', function(id){
     console.log("bridge - ready " + id);
     
