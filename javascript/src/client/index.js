@@ -316,15 +316,22 @@ class Red5JsBridge extends EventEmitter {
 
                     if(typeCheck('String', param)) 
                     {
-                        try 
+                        if(param.startsWith("{")) 
                         {
-                            JSON.parse(param);
-                            processedParameters.push({value:param, type: "JSONObject"});
-                        } 
-                        catch (e) 
+                            try 
+                            {
+                                JSON.parse(param);
+                                processedParameters.push({value:param, type: "JSONObject"});
+                            } 
+                            catch (e) 
+                            {
+                                console.error("Invalid json string!");
+                            }   
+                        }
+                        else
                         {
-                            processedParameters.push({value:param, type: "String"});
-                        }                 
+                            processedParameters.push({value:param, type: "String"});        
+                        }             
 
                     }
                     else if(typeCheck('Boolean', param)) 
@@ -543,6 +550,20 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     getConnections() {
         var method = "getConnections";
         var parameters = [];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    
+     /*
+    * Get connection by id
+    */
+    getConnection(id) {
+        var method = "getConnection";
+        var parameters = [id];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -913,7 +934,7 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
 bridge.on('bridge.ready', function(id){
     console.log("bridge - ready " + id);
     
-    bridge.getConnections().then(function(result){
+    bridge.getConnection("5A8X6GZV4BYX2").then(function(result){
       console.log("result =>" + result.length);  
     })
     .catch(function(error){

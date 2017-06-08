@@ -383,10 +383,15 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			exception = e;
 			logger.error("Error " + e.getMessage());
 		} 
-		catch (InvocationTargetException | NoSuchMethodException e)
+		catch(NoSuchMethodException e)
 		{
 			exception = e;
-			logger.error("Error " + e.getMessage());
+			logger.error("No Such Method found : " + e.getMessage());
+		}
+		catch (InvocationTargetException e)
+		{
+			exception = new Exception(e.getTargetException());
+			logger.error("Unable to call method " + e.getTargetException().getMessage());
 		}
 		catch (MessageFormatException e)
 		{
