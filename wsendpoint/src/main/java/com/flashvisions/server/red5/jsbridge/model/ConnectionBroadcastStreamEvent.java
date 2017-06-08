@@ -2,13 +2,12 @@ package com.flashvisions.server.red5.jsbridge.model;
 
 import com.flashvisions.server.red5.jsbridge.alternate.model.BroadcastStream;
 import com.flashvisions.server.red5.jsbridge.alternate.model.Connection;
-import com.flashvisions.server.red5.jsbridge.alternate.model.Stream;
 
-public class ConnectionStreamEvent {
+public class ConnectionBroadcastStreamEvent {
 	
 	private Connection connection;
 	
-	private Stream stream;
+	private BroadcastStream stream;
 	
 
 	public Connection getConnection() {
@@ -19,14 +18,13 @@ public class ConnectionStreamEvent {
 		this.connection = connection;
 	}
 
-	public Stream getStream() {
+	public BroadcastStream getStream() {
 		return stream;
 	}
 
-	public void setStream(Stream stream) {
+	public void setStream(BroadcastStream stream) {
 		this.stream = stream;
 	}
-
 	
 	
 }

@@ -4,6 +4,7 @@ public enum BridgeMessageType {
 	
 	EVENT("event"),
 	RMI("rmi"),
+	API("api"),
 	PUSH("push_message");
 	
 	private final String name;    

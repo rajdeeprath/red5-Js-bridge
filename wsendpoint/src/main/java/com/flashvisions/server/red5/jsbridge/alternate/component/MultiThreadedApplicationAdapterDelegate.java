@@ -46,6 +46,8 @@ import com.flashvisions.server.red5.jsbridge.alternate.model.SubscriberStream;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
 import com.flashvisions.server.red5.jsbridge.listeners.JsBridgeConnection;
 import com.flashvisions.server.red5.jsbridge.model.ConnectParamsEvent;
+import com.flashvisions.server.red5.jsbridge.model.ConnectionBroadcastStreamEvent;
+import com.flashvisions.server.red5.jsbridge.model.ConnectionStreamEvent;
 import com.flashvisions.server.red5.jsbridge.model.ScopeConnectionEvent;
 import com.flashvisions.server.red5.jsbridge.model.SharedObjectSend;
 import com.flashvisions.server.red5.jsbridge.model.SharedObjectUpdate;
@@ -386,11 +388,18 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	public void streamBroadcastStart(IBroadcastStream stream) {
 		
+		IConnection conn = Red5.getConnectionLocal();
+		
 		executor.execute(new Runnable(){
 
 			@Override
 			public void run() {
-				bridge.broadcastEvent("stream.publishStart", toBroadcastStream(stream));
+				
+				ConnectionBroadcastStreamEvent notification = new ConnectionBroadcastStreamEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setStream(toBroadcastStream(stream));
+				
+				bridge.broadcastEvent("stream.publishStart", notification);
 			}
 			
 		});
@@ -402,11 +411,18 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	public void streamBroadcastClose(IBroadcastStream stream) {
 		
+		IConnection conn = Red5.getConnectionLocal();
+		
 		executor.execute(new Runnable(){
 
 			@Override
 			public void run() {
-				bridge.broadcastEvent("stream.publishStop", toBroadcastStream(stream));
+				
+				ConnectionBroadcastStreamEvent notification = new ConnectionBroadcastStreamEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setStream(toBroadcastStream(stream));
+				
+				bridge.broadcastEvent("stream.publishStop", notification);
 			}
 			
 		});
@@ -417,11 +433,18 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	public void streamSubscriberStart(IStream stream) {
 		
+		IConnection conn = Red5.getConnectionLocal();
+		
 		executor.execute(new Runnable(){
 
 			@Override
 			public void run() {
-				bridge.broadcastEvent("stream.subscribeStart", toStream(stream));
+				
+				ConnectionStreamEvent notification = new ConnectionStreamEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setStream(toStream(stream));
+				
+				bridge.broadcastEvent("stream.subscribeStart", notification);
 			}
 			
 		});
@@ -432,11 +455,18 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	public void streamSubscriberClose(IStream stream) {
 		
+		IConnection conn = Red5.getConnectionLocal();
+		
 		executor.execute(new Runnable(){
 
 			@Override
 			public void run() {
-				bridge.broadcastEvent("stream.subscribeStop", toStream(stream));
+				
+				ConnectionStreamEvent notification = new ConnectionStreamEvent();
+				notification.setConnection(toConnection(conn));
+				notification.setStream(toStream(stream));
+				
+				bridge.broadcastEvent("stream.subscribeStop", notification);
 			}
 		});
 		

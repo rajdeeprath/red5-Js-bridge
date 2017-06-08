@@ -31,6 +31,7 @@ import com.flashvisions.server.red5.jsbridge.exceptions.MessageFormatException;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
 import com.flashvisions.server.red5.jsbridge.model.EventMessage;
+import com.flashvisions.server.red5.jsbridge.model.IIncomingMessage;
 import com.flashvisions.server.red5.jsbridge.model.RMIMessage;
 import com.flashvisions.server.red5.jsbridge.model.OutGoingMessage;
 import com.flashvisions.server.red5.jsbridge.model.MessageStatus;
@@ -55,6 +56,8 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	private ExecutorService threadedExecutor = Executors.newCachedThreadPool();
 	
 	private ConnectionManager connManager;
+	
+	private MultiThreadedApplicationAdapterDelegate delegate;
 
 
     {
@@ -279,7 +282,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	            appAdapter = (MultiThreadedApplicationAdapter) applicationContext.getBean("web.handler");
 	            logger.debug("Linked to app: {}", appAdapter);
 	            
-	    		MultiThreadedApplicationAdapterDelegate delegate = new MultiThreadedApplicationAdapterDelegate(this, appAdapter);
+	    		delegate = new MultiThreadedApplicationAdapterDelegate(this, appAdapter);
 	            delegate.initialize();
 	     } 
 		 else 
@@ -315,15 +318,25 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 
 	private void resolveWebsocketMessage(WSMessage message) 
 	{
-		RMIMessage request = null;
+		IIncomingMessage request = null;
 		OutGoingMessage response = null;
 		Exception exception = null;
 		
 		try 
 		{
+			
 			request = getMessageFromPayload(message);
 			
-			Object instance = appAdapter;
+			Object instance = null;
+			if(request.getType() == BridgeMessageType.RMI)    
+			{
+				instance = appAdapter;
+			}
+			else if(request.getType() == BridgeMessageType.API)    
+			{
+				instance = delegate;
+			}
+			
 			
 			
 			String methodName = request.getMethod();
@@ -333,16 +346,18 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			Class[] parameterTypes = new Class[arguments];
 			    for (int i = 0; i < arguments; i++) {
 			    parameterTypes[i] = args[i].getClass();
+			}  
+	
+			Method method = MethodUtils.getMatchingAccessibleMethod(instance.getClass(), methodName, parameterTypes);
+			if(method == null) 
+			{
+				throw new NoSuchMethodException("No such invocable method '" + methodName + "' found in " + instance.getClass().getSimpleName());
 			}
-			
-			Method method = MethodUtils.getMatchingAccessibleMethod(appAdapter.getClass(), methodName, parameterTypes);
-			
-			if(method == null) {
-				throw new NoSuchMethodException("No such invocable method '" + methodName + "' found in Application Adapter");
-			}
-			else if(!method.isAnnotationPresent(Invocable.class)){
+			else if(instance.equals(appAdapter) && !method.isAnnotationPresent(Invocable.class))
+			{
 				throw new SecurityException("Method found is not invocable");
 			}
+			
 			
 			
 			response = new OutGoingMessage();
@@ -352,11 +367,11 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			
 			if(method.getReturnType() == void.class || method.getReturnType() == Void.TYPE)
 			{
-				method.invoke(appAdapter, args);
+				method.invoke(instance, args);
 			}
 			else
 			{
-				Object result = method.invoke(appAdapter, args);
+				Object result = method.invoke(instance, args);
 				response.setData(result);
 			}
 			
@@ -579,9 +594,9 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 
 
 
-	private RMIMessage getMessageFromPayload(WSMessage message) throws MessageFormatException
+	private IIncomingMessage getMessageFromPayload(WSMessage message) throws MessageFormatException
 	{
-		MessageConverter messageConverter;
+		MessageConverter messageConverter = null;
 		String path = null;
 		
 		try
@@ -596,17 +611,24 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 			
 			if(json.has("type")) // proper message ?
 			{
-				RMIMessage request = (RMIMessage) messageConverter.fromJson(json);
+				BridgeMessageType type = BridgeMessageType.valueOf(json.get("type").getAsString()); 
+				IIncomingMessage request = (IIncomingMessage) messageConverter.fromJson(json, type);
 				return request;
 			}
 			else
 			{
-				throw new MessageFormatException("Unexpected data format. Missing fields detected in" + json.toString());
+				throw new MessageFormatException("Unexpected data format : " + json.toString());
 			}
 		}
 		catch(Exception me)
 		{
 			throw new MessageFormatException("Invalid message format.Cause " + me.getMessage());
+		}
+		finally
+		{
+			if(messageConverter != null){
+				messageConverter = null;
+			}
 		}
 	}
 }

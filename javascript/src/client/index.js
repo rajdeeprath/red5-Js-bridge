@@ -183,10 +183,10 @@ class Red5JsBridge extends EventEmitter {
                     var evt = obj.data;
                     this.emit(evt.name, evt.data);
                 }
-                else if(obj["type"] === "RMI") 
+                else if(obj["type"] === "RMI" || obj["type"] === "API") 
                 {
                     if(this.options.debug){
-                        console.log("RMI response received");
+                        console.log(obj["type"] + " response received");
                     }
 
                     // handle RMI response
@@ -205,7 +205,9 @@ class Red5JsBridge extends EventEmitter {
                     }
                     else
                     {
-                        throw new Error("No promise found for RMI response");
+                        if(this.options.debug){
+                            console.log("No promise found for response");
+                        }
                     }
                 }
             }
@@ -512,6 +514,38 @@ class Red5JsBridgedApplication extends Red5JsBridge {
         this._handleApplicationAdpterEvents();               
 
     }
+    
+    
+    
+    
+    
+    
+    /*
+    * Create request packet for API call
+    */
+    _createAPIRequest(method, parameters) {
+        var packet = {};
+        packet.id = this._generateUniqueId();
+        packet.timestamp = new Date().getTime();
+        packet.type = "API";
+        packet.method = method;
+        packet.data = Red5JsBridge.preprocess(parameters);
+        return packet;
+    }
+    
+    
+    
+    
+    
+    /*
+    * Get all connections
+    */
+    getConnections() {
+        var method = "getConnections";
+        var parameters = [];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
 
 
 
@@ -727,12 +761,13 @@ class Red5JsBridgedApplication extends Red5JsBridge {
                 console.log("publishStart");
             }
             
-            const stream = data;            
+            const connection = data.connection;
+            const stream = data.stream;                
             
             if(appHandler) {
                 let fn = appHandler.streamBroadcastStart;
                 if(typeof fn === 'function') {
-                    fn.call(appHandler, stream);
+                    fn.call(appHandler, connection, stream);
                 } 
             }
         });
@@ -743,12 +778,13 @@ class Red5JsBridgedApplication extends Red5JsBridge {
                 console.log("publishStop");
             }
             
-            const stream = data;            
+            const connection = data.connection;
+            const stream = data.stream;            
             
             if(appHandler) {
                 let fn = appHandler.streamBroadcastClose;
                 if(typeof fn === 'function') {
-                    fn.call(appHandler, stream);
+                    fn.call(appHandler, connection, stream);
                 } 
             }
         });
@@ -759,12 +795,13 @@ class Red5JsBridgedApplication extends Red5JsBridge {
                 console.log("subscribeStart");
             }
             
-            const stream = data;
+            const connection = data.connection;
+            const stream = data.stream;    
             
             if(appHandler) {
                 let fn = appHandler.streamSubscriberStart;
                 if(typeof fn === 'function') {
-                    fn.call(appHandler, stream);
+                    fn.call(appHandler, connection, stream);
                 } 
             }
         });
@@ -775,12 +812,13 @@ class Red5JsBridgedApplication extends Red5JsBridge {
                 console.log("subscribeStop");
             }
             
-            const stream = data;
+            const connection = data.connection;
+            const stream = data.stream;    
             
             if(appHandler) {
                 let fn = appHandler.streamSubscriberClose;
                 if(typeof fn === 'function') {
-                    fn.call(appHandler, stream);
+                    fn.call(appHandler, connection, stream);
                 } 
             }
         });
@@ -814,60 +852,59 @@ bridge.connect();
 var bridge = new Red5JsBridgedApplication({debug: true}, {
     
     "appStart" : function(scope) {
-    
+        console.log("appStart");
     },                                          
                                           
     "appConnect" : function(connection, params) {
-    
-        
+        console.log("appConnect");
     },                                        
                                           
     "appJoin" : function(connection, scope) {
-    
+        console.log("appJoin");
     },
                                           
     "roomConnect" : function(connection, params) {
-    
+        console.log("roomConnect");
     },                                        
                                           
     "roomJoin" : function(connection, scope) {
-    
+        console.log("roomJoin");
     },
 
     "roomLeave" : function(connection, scope) {
-    
+        console.log("roomLeave");
     },  
     
     "roomStop" : function(scope) {
-    
+        console.log("roomStop");
     },
                                           
     "roomDisconnect" : function(connection) {
-    
+        console.log("roomDisconnect");
     },
     
     "appDisconnect" : function(connection) {
-    
+        console.log("appDisconnect");
     },
     
     "appStop" : function(scope) {
-    
+        console.log("appStop");
     },
     
     "streamBroadcastStart" : function(stream) {
-    
+        console.log("streamBroadcastStart");
     },
     
     "streamBroadcastClose" : function(stream) {
-    
+        console.log("streamBroadcastClose");
     },
     
     "streamSubscriberStart" : function(stream) {
-    
+        console.log("streamSubscriberStart");
     },
     
     "streamSubscriberClose" : function(stream) {
-    
+         console.log("streamSubscriberClose");
     },
                                           
 });
@@ -876,9 +913,8 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
 bridge.on('bridge.ready', function(id){
     console.log("bridge - ready " + id);
     
-    bridge.invoke('greet', "rajdeep")
-    .then(function(result){
-      console.log("result =>" + result);  
+    bridge.getConnections().then(function(result){
+      console.log("result =>" + result.length);  
     })
     .catch(function(error){
       console.log("error =>" + error);  

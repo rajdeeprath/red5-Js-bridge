@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.flashvisions.server.red5.jsbridge.interfaces.IMessage;
+import com.flashvisions.server.red5.jsbridge.model.APIMessage;
+import com.flashvisions.server.red5.jsbridge.model.BridgeMessageType;
 import com.flashvisions.server.red5.jsbridge.model.RMIMessage;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -35,6 +37,25 @@ public class MessageConverter {
 	public IMessage fromJson(JsonObject json)
 	{
 		return gson.fromJson(json.toString(), RMIMessage.class);
+	}
+	
+	
+	
+	public IMessage fromJson(JsonObject json, BridgeMessageType type)
+	{
+		if(type == BridgeMessageType.RMI)
+		{
+			return gson.fromJson(json.toString(), RMIMessage.class);
+		}
+		else if(type == BridgeMessageType.API)
+		{
+			return gson.fromJson(json.toString(), APIMessage.class);
+		}
+		else
+		{
+			return null;
+		}
+		
 	}
 
 }
