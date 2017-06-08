@@ -811,7 +811,68 @@ bridge.connect();
     
     
     
-var bridge = new Red5JsBridgedApplication({debug: true});
+var bridge = new Red5JsBridgedApplication({debug: true}, {
+    
+    "appStart" : function(scope) {
+    
+    },                                          
+                                          
+    "appConnect" : function(connection, params) {
+    
+        
+    },                                        
+                                          
+    "appJoin" : function(connection, scope) {
+    
+    },
+                                          
+    "roomConnect" : function(connection, params) {
+    
+    },                                        
+                                          
+    "roomJoin" : function(connection, scope) {
+    
+    },
+
+    "roomLeave" : function(connection, scope) {
+    
+    },  
+    
+    "roomStop" : function(scope) {
+    
+    },
+                                          
+    "roomDisconnect" : function(connection) {
+    
+    },
+    
+    "appDisconnect" : function(connection) {
+    
+    },
+    
+    "appStop" : function(scope) {
+    
+    },
+    
+    "streamBroadcastStart" : function(stream) {
+    
+    },
+    
+    "streamBroadcastClose" : function(stream) {
+    
+    },
+    
+    "streamSubscriberStart" : function(stream) {
+    
+    },
+    
+    "streamSubscriberClose" : function(stream) {
+    
+    },
+                                          
+});
+
+
 bridge.on('bridge.ready', function(id){
     console.log("bridge - ready " + id);
     
