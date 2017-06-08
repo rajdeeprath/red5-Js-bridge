@@ -620,10 +620,34 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     */
     addAtrributes(connection, map) {
         var method = "addAtrributes";
-        var parameters = [connection.sessionId, {type:"Map", value: map}];
+        var parameters = [connection.sessionId, {type:"Map", value: this._map_to_object(map)}];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
+    
+    
+    
+    
+    
+    /**
+     * Convert a `Map` to a standard
+     * JS object recursively.
+     * 
+     * @param {Map} map to convert.
+     * @returns {Object} converted object.
+     */
+     _map_to_object(map) {
+        const out = Object.create(null)
+        map.forEach((value, key) => {
+          if (value instanceof Map) {
+            out[key] = _map_to_object(value)
+          }
+          else {
+            out[key] = value
+          }
+        })
+        return out
+      }
 
     
     

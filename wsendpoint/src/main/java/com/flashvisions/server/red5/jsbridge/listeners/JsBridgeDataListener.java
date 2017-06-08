@@ -2,8 +2,11 @@ package com.flashvisions.server.red5.jsbridge.listeners;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,10 +41,12 @@ import com.flashvisions.server.red5.jsbridge.model.MessageStatus;
 import com.flashvisions.server.red5.jsbridge.model.BridgeMessageType;
 import com.flashvisions.server.red5.jsbridge.model.annotations.Invocable;
 import com.flashvisions.server.red5.jsbridge.model.converter.MessageConverter;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.reflect.TypeToken;
 
 public class JsBridgeDataListener extends WebSocketDataListener implements IJsBridge, InitializingBean, ApplicationContextAware {
 
@@ -426,6 +431,7 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 	{		
 		// substitute nulls
 		ArrayList<Object> sanitizedParameters = new ArrayList<Object>();
+		Gson gson = new Gson();
 		
 		for(Object argument : arguments)
 		{			
@@ -492,7 +498,10 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 				}
 				else if(type.equals("Map"))
 				{
-					logger.info("Map type data structure");
+					
+					Type genericMap = new TypeToken<Map<String, Object>>(){}.getType();
+					Map<String,Object> param = gson.fromJson(data.toString(), genericMap);
+					sanitizedParameters.add(param);		
 				}
 				else
 				{
