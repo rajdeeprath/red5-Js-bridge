@@ -590,6 +590,19 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     /*
+    * Get connection attribute
+    */
+    getAtrribute(connection, key) {
+        var method = "getAtrribute";
+        var parameters = [connection.sessionId, key];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
     * Set connection attribute
     */
     addAtrribute(connection, key, value) {
@@ -599,6 +612,31 @@ class Red5JsBridgedApplication extends Red5JsBridge {
         return this._send(request);
     }
 
+    
+    
+    
+    /*
+    * Disconnect connection
+    */
+    disconnect(connection) {
+        var method = "disconnect";
+        var parameters = [connection.sessionId];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Ping connection
+    */
+    ping(connection) {
+        var method = "ping";
+        var parameters = [connection.sessionId];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
 
 
 
@@ -913,6 +951,20 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
         bridge.addAtrribute(connection, "time", new Date().getTime())
         .then(function(result){
             console.log("result " + JSON.stringify(result));
+            
+            bridge.getAtrributes(connection)
+            .then(function(result){
+                console.log("result " + JSON.stringify(result));
+                return result;
+                
+            })
+            .then(function(result){
+                
+                bridge.disconnect(connection);
+            })
+            .catch(function(err){
+                console.log("err");
+            });
         })
         .catch(function(err){
             console.log("err");
@@ -965,7 +1017,7 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
     
     "streamSubscriberClose" : function(stream) {
          console.log("streamSubscriberClose");
-    },
+    }
                                           
 });
 
