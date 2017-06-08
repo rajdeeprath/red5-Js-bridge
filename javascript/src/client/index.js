@@ -611,6 +611,19 @@ class Red5JsBridgedApplication extends Red5JsBridge {
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
+    
+    
+    
+    
+    /*
+    * Set connection attributes => [] TO DO ]
+    */
+    addAtrributes(connection, map) {
+        var method = "addAtrributes";
+        var parameters = [connection.sessionId, {type:"Map", value: map}];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
 
     
     
@@ -960,7 +973,16 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
             })
             .then(function(result){
                 
-                bridge.disconnect(connection);
+                let map = new Map();
+                map.set("name", "rajdeep");
+                map.set("count", 1);
+                
+                bridge.addAtrributes(connection, map).then(function(result){
+                     console.log("success");
+                })
+                .catch(function(err){
+                     console.log("err");
+                });
             })
             .catch(function(err){
                 console.log("err");

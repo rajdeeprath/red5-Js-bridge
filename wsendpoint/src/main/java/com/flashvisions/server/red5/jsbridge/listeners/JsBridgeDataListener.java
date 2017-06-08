@@ -490,6 +490,10 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 					JsonObject param = new JsonParser().parse(data.toString()).getAsJsonObject();
 					sanitizedParameters.add(param);
 				}
+				else if(type.equals("Map"))
+				{
+					logger.info("Map type data structure");
+				}
 				else
 				{
 					throw new InvalidParameterException("Unrecognized parameter type");
