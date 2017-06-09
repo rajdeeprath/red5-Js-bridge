@@ -1,6 +1,6 @@
 let Red5JsBridge = (function () {
     
-let defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
+const defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
 
 const EventEmitter = require('events');  
 const Promise = require('promise');
@@ -15,6 +15,7 @@ class Red5JsBridge extends EventEmitter {
             
             this._options = {}, 
             this._sessionId = undefined, 
+            this._appScope = undefined,
             this._connected = false, 
             this._ws = undefined,
             this._rmiPromises = {},
@@ -37,18 +38,21 @@ class Red5JsBridge extends EventEmitter {
 
             
             /* Listen for events */
-            this.on("session.id", function(id){
+            this.on("session.id", function(obj){
                 if(this.options.debug) {
-                    console.log("Setting session." + id);
+                    console.log("Setting session." + obj.sessionId);
                 }
                 
-                this._sessionId = id;
-                this.emit("bridge.ready", this.sessionId);
+                this._sessionId = obj.sessionId;
+                this._appScope = obj.scope;
+                
+                this.emit("bridge.ready", obj);
             });
             
             this.on("session.closing", function(reason){
                 if(this.options.debug) {
                     console.log("Session closing." + reason);
+                    this.emit("bridge.closing", reason);
                 }
             });
             
@@ -153,6 +157,16 @@ class Red5JsBridge extends EventEmitter {
     
     
         /*
+        * Get application scope
+        */
+        get appScope() {
+            return this._appScope;
+        }
+    
+    
+    
+    
+        /*
         * Return options
         */
         get options() {
@@ -222,6 +236,7 @@ class Red5JsBridge extends EventEmitter {
         */
         _handleClose(data) {
             this._connected = false; 
+            this.emit("bridge.close", {sessionId: this._sessionId, scope: this._appScope});
         }
     
     
@@ -616,7 +631,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     /*
-    * Set connection attributes => [] TO DO ]
+    * Set connection attributes
     */
     addAtrributes(connection, map) {
         var method = "addAtrributes";
@@ -674,9 +689,99 @@ class Red5JsBridgedApplication extends Red5JsBridge {
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
+    
+    
+    
+    
+    /*
+    * Check if broadcast stream exists at a particular scope
+    */
+    hasBroadcastStream(name, scope) {
+        var method = "hasBroadcastStream";
+        var parameters = [name, scope.path];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }  
+    
+    
+    
+    
+    /*
+    * Get broadcast stream
+    */
+    getBroadcastStream(name, scope) {
+        var method = "getBroadcastStream";
+        var parameters = [name, scope.path];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Get all broadcast streams in a scope
+    */
+    getBroadcastStreamNames(scope) {
+        var method = "getBroadcastStreamNames";
+        var parameters = [scope.path];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Record a stream
+    */
+    recordStream(name, scope, saveAs, overWrite) {
+        var method = "recordStream";
+        var parameters = [name, scope, saveAs, overWrite];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Get stream length
+    */
+    getStreamLength(name) {
+        var method = "getStreamLength";
+        var parameters = [name];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Validate parameters for overloaded function
+    */
+    _validateOverload(params, allowedTypes, minParamCount, maxParamCount){
+        
+        if(params.length < minParamCount){
+            throw new Error("Minimum of " + minParamCount + " parameters required.");
+        }
+        
+        
+        for(let i=0;i < maxParamCount; i++) {   
+            var p = params[i];
+            var t = allowedTypes[i];
+            
+             // Check if param is of type t
+            if(!typeCheck(t, p)) {
+                throw new Error("Unexpected param type.");
+            }
+        }
+    }
 
 
 
+    
 
     /*
     * Handling application adapter events
@@ -695,7 +800,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const scope = data;
             
             if(appHandler) {
-                let fn = appHandler.appStart;
+                const fn = appHandler.appStart;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, scope);
                 } 
@@ -711,7 +816,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const params = data.params;
             
             if(appHandler) {
-                let fn = appHandler.appConnect;
+                const fn = appHandler.appConnect;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, params);
                 } 
@@ -727,7 +832,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const scope = data.scope;
             
             if(appHandler) {
-                let fn = appHandler.appJoin;
+                const fn = appHandler.appJoin;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, scope);
                 } 
@@ -743,7 +848,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const connection = data;
             
             if(appHandler) {
-                let fn = appHandler.appDisconnect;
+                const fn = appHandler.appDisconnect;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection);
                 } 
@@ -760,7 +865,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const scope = data.scope;
             
             if(appHandler) {
-                let fn = appHandler.appLeave;
+                const fn = appHandler.appLeave;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, scope);
                 } 
@@ -776,7 +881,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const scope = data;
             
             if(appHandler) {
-                let fn = appHandler.appStop;
+                const fn = appHandler.appStop;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, scope);
                 } 
@@ -792,7 +897,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const scope = data;            
             
             if(appHandler) {
-                let fn = appHandler.roomStart;
+                const fn = appHandler.roomStart;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, scope);
                 } 
@@ -809,7 +914,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const params = data.params;
             
             if(appHandler) {
-                let fn = appHandler.roomConnect;
+                const fn = appHandler.roomConnect;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, params);
                 } 
@@ -826,7 +931,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const scope = data.scope;
             
             if(appHandler) {
-                let fn = appHandler.roomJoin;
+                const fn = appHandler.roomJoin;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, scope);
                 } 
@@ -842,7 +947,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const connection = data;
             
             if(appHandler) {
-                let fn = appHandler.roomDisconnect;
+                const fn = appHandler.roomDisconnect;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection);
                 } 
@@ -859,7 +964,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const scope = data.scope;
             
             if(appHandler) {
-                let fn = appHandler.roomLeave;
+                const fn = appHandler.roomLeave;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, scope);
                 } 
@@ -875,7 +980,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const scope = data;
             
             if(appHandler) {
-                let fn = appHandler.roomStop;
+                const fn = appHandler.roomStop;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, scope);
                 } 
@@ -892,7 +997,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const stream = data.stream;                
             
             if(appHandler) {
-                let fn = appHandler.streamBroadcastStart;
+                const fn = appHandler.streamBroadcastStart;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, stream);
                 } 
@@ -909,7 +1014,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const stream = data.stream;            
             
             if(appHandler) {
-                let fn = appHandler.streamBroadcastClose;
+                const fn = appHandler.streamBroadcastClose;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, stream);
                 } 
@@ -926,7 +1031,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const stream = data.stream;    
             
             if(appHandler) {
-                let fn = appHandler.streamSubscriberStart;
+                const fn = appHandler.streamSubscriberStart;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, stream);
                 } 
@@ -943,7 +1048,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             const stream = data.stream;    
             
             if(appHandler) {
-                let fn = appHandler.streamSubscriberClose;
+                const fn = appHandler.streamSubscriberClose;
                 if(typeof fn === 'function') {
                     fn.call(appHandler, connection, stream);
                 } 
@@ -1068,7 +1173,9 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
 });
 
 
-bridge.on('bridge.ready', function(id){
-    console.log("bridge - ready " + id);
+bridge.on('bridge.ready', function(obj){
+    console.log("bridge is open");
+    console.log("Session Id " + obj.sessionId);
+    console.log("Application Scope " + JSON.stringify(obj.scope));
 });
 bridge.connect();

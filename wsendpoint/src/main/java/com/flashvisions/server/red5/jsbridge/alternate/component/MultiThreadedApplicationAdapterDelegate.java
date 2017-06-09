@@ -570,8 +570,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 
 	
-	public boolean hasBroadcastStream(Scope scope, String name) throws ResourceNotFoundException {
-		IScope subScope = fromScope(scope);
+	public boolean hasBroadcastStream(String name, String scopePath) throws ResourceNotFoundException {
+		IScope subScope = fromScopePath(scopePath);
 		return appAdapter.hasBroadcastStream(subScope, name);
 	}
 	
@@ -583,8 +583,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 
 	
 
-	public BroadcastStream getBroadcastStream(Scope scope, String name) throws ResourceNotFoundException {
-		IScope subScope = fromScope(scope);
+	public BroadcastStream getBroadcastStream(String name, String scopePath) throws ResourceNotFoundException {
+		IScope subScope = fromScopePath(scopePath);
 		BroadcastStream stream = toBroadcastStream(appAdapter.getBroadcastStream(subScope, name));
 		return stream;
 	}
@@ -595,22 +595,9 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	}
 
 	
-	public Set<String> getBroadcastStreamNames(Scope scope) throws ResourceNotFoundException {
-		IScope subScope = fromScope(scope);
+	public Set<String> getBroadcastStreamNames(String scopePath) throws ResourceNotFoundException {
+		IScope subScope = fromScopePath(scopePath);
 		return appAdapter.getBroadcastStreamNames(subScope);
-	}
-	
-	
-	public SubscriberStream getSubscriberStream(String name) {
-		SubscriberStream stream = this.toSubscribeStream(appAdapter.getSubscriberStream(appScope, name));
-		return stream;
-	}
-	
-	
-	public SubscriberStream getSubscriberStream(Scope scope, String name) throws ResourceNotFoundException {
-		IScope subScope = fromScope(scope);
-		SubscriberStream stream = this.toSubscribeStream(appAdapter.getSubscriberStream(subScope, name));
-		return stream;
 	}
 
 	
@@ -620,17 +607,17 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 
 	
 	
-	public void recordStream(BroadcastStream stream, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
-		IBroadcastStream bStream = appAdapter.getBroadcastStream(appScope, stream.getName());
+	public void recordStream(String name, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
+		IBroadcastStream bStream = appAdapter.getBroadcastStream(appScope, name);
 		if(bStream != null){
 			bStream.saveAs(saveAs, !overWrite);
 		}
 	}
 	
 	
-	public void recordStream(BroadcastStream stream, Scope scope, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
-		IScope subScope = fromScope(scope);
-		IBroadcastStream bStream = appAdapter.getBroadcastStream(subScope, stream.getName());
+	public void recordStream(String name, String scopePath, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
+		IScope subScope = fromScopePath(scopePath);
+		IBroadcastStream bStream = appAdapter.getBroadcastStream(subScope, name);
 		if(bStream != null){
 			bStream.saveAs(saveAs, !overWrite);
 		}

@@ -33,6 +33,7 @@ import com.flashvisions.server.red5.jsbridge.alternate.component.MultiThreadedAp
 import com.flashvisions.server.red5.jsbridge.exceptions.MessageFormatException;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJSBridgeAware;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
+import com.flashvisions.server.red5.jsbridge.model.BridgeSessionStreamEvent;
 import com.flashvisions.server.red5.jsbridge.model.EventMessage;
 import com.flashvisions.server.red5.jsbridge.model.IIncomingMessage;
 import com.flashvisions.server.red5.jsbridge.model.RMIMessage;
@@ -41,6 +42,7 @@ import com.flashvisions.server.red5.jsbridge.model.MessageStatus;
 import com.flashvisions.server.red5.jsbridge.model.BridgeMessageType;
 import com.flashvisions.server.red5.jsbridge.model.annotations.Invocable;
 import com.flashvisions.server.red5.jsbridge.model.converter.MessageConverter;
+import com.flashvisions.server.red5.jsbridge.utils.Red5JsBridgeUtilities;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -130,7 +132,12 @@ public class JsBridgeDataListener extends WebSocketDataListener implements IJsBr
 				OutGoingMessage message = new OutGoingMessage();
 				message.setType(BridgeMessageType.EVENT);
 				message.setStatus(MessageStatus.DATA);
-				message.setData(new EventMessage("session.id", bridgeConnection.getSessionId()));
+				
+				BridgeSessionStreamEvent notification = new BridgeSessionStreamEvent();
+				notification.setSessionId(bridgeConnection.getSessionId());
+				notification.setScope(Red5JsBridgeUtilities.toScope(appScope));
+				
+				message.setData(new EventMessage("session.id", notification));
 				connManager.sendToConnection(bridgeConnection.getSignalChannel(), message);
 			}
 			
