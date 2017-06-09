@@ -607,7 +607,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 
 	
 	
-	public void recordStream(String name, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
+	public void recordStart(String name, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
 		IBroadcastStream bStream = appAdapter.getBroadcastStream(appScope, name);
 		if(bStream != null){
 			bStream.saveAs(saveAs, !overWrite);
@@ -615,11 +615,30 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	}
 	
 	
-	public void recordStream(String name, String scopePath, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
+	public void recordStart(String name, String scopePath, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
 		IScope subScope = fromScopePath(scopePath);
 		IBroadcastStream bStream = appAdapter.getBroadcastStream(subScope, name);
 		if(bStream != null){
 			bStream.saveAs(saveAs, !overWrite);
+		}
+	}
+	
+	
+	public void recordStop(String name, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		if(!bStream.isRecording()){
+			bStream.saveAs(saveAs, !overWrite);
+		}
+	}
+	
+	
+	public void recordStop(String name, String scopePath, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
+		IScope subScope = fromScopePath(scopePath);
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		if(bStream.isRecording()){
+			bStream.stopRecording();
 		}
 	}
 	
