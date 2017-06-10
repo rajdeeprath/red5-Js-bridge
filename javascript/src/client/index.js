@@ -732,7 +732,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     /*
-    * Get root scope object for path
+    * Get root scope object for a given scope
     */
     getRootScope(scope) {
         var method = "getRootScope";
@@ -872,8 +872,8 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Get stream stats
     */
-    BroadcastStreamStatistics(name, scope){
-        var method = "BroadcastStreamStatistics";
+    getStreamStatistics(name, scope){
+        var method = "getStreamStatistics";
         var parameters = [name, this._getFullScopePath(scope)];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
