@@ -46,6 +46,7 @@ import com.flashvisions.server.red5.jsbridge.listeners.JsBridgeConnection;
 import com.flashvisions.server.red5.jsbridge.model.BroadcastStreamStatistics;
 import com.flashvisions.server.red5.jsbridge.model.ConnectParamsEvent;
 import com.flashvisions.server.red5.jsbridge.model.ConnectionBroadcastStreamEvent;
+import com.flashvisions.server.red5.jsbridge.model.ConnectionStatistics;
 import com.flashvisions.server.red5.jsbridge.model.ConnectionStreamEvent;
 import com.flashvisions.server.red5.jsbridge.model.ScopeConnectionEvent;
 import com.flashvisions.server.red5.jsbridge.model.SharedObjectSend;
@@ -533,49 +534,57 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	public Connection getConnection(String sessionId) throws Exception {
-		IConnection connection = getConnectionById(sessionId);
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
 		return Red5JsBridgeUtilities.toConnection(connection);
 	}
 	
 	
 	
+	
+	public ConnectionStatistics getConnectionStatistics(String sessionId) throws Exception {
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
+		return Red5JsBridgeUtilities.toConnectionStatistics(connection);
+	}
+	
+	
+	
 	public boolean addAtrributes(String sessionId, Map<String, Object> attribute) throws Exception {
-		IConnection connection = this.getConnectionById(sessionId);
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
 		return connection.setAttributes(attribute);
 	}
 	
 	
 	
 	public boolean addAtrribute(String sessionId, String name, Object value) throws Exception {
-		IConnection connection = this.getConnectionById(sessionId);
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
 		return connection.setAttribute(name, value);
 	}
 	
 	
 	
 	public Map<String, Object> getAtrributes(String sessionId) throws Exception {
-		IConnection connection = this.getConnectionById(sessionId);
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
 		return connection.getAttributes();
 	}
 	
 	
 	
 	public Object getAtrribute(String sessionId, String name) throws Exception {
-		IConnection connection = this.getConnectionById(sessionId);
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
 		return connection.getAttribute(name);
 	}
 	
 	
 	
 	public void disconnect(String sessionId) throws Exception {
-		IConnection connection = this.getConnectionById(sessionId);
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
 		connection.close();
 	}
 	
 	
 	
 	public void ping(String sessionId) throws Exception {
-		IConnection connection = this.getConnectionById(sessionId);
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
 		connection.ping();
 	}
 	
@@ -973,18 +982,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	 ****************************************************/
 	
 	
-	private IConnection getConnectionById(String sessionId) throws Exception{
-		
-		IScope appScope = appAdapter.getScope();
-		Set<IConnection>connections = appScope.getClientConnections();
-		for(IConnection connection: connections){
-			if(connection.getSessionId().equalsIgnoreCase(sessionId) && connection.isConnected()){
-				return connection;
-			}
-		}
-		
-		throw new Exception("Connection object not found");
-	}
+	
 	
 	
 	

@@ -1,5 +1,8 @@
 package com.flashvisions.server.red5.jsbridge.utils;
 
+import java.util.Set;
+
+import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.scope.IScope;
 import org.red5.server.api.so.ISharedObject;
@@ -17,6 +20,7 @@ import com.flashvisions.server.red5.jsbridge.alternate.model.SharedObject;
 import com.flashvisions.server.red5.jsbridge.alternate.model.Stream;
 import com.flashvisions.server.red5.jsbridge.alternate.model.SubscriberStream;
 import com.flashvisions.server.red5.jsbridge.model.BroadcastStreamStatistics;
+import com.flashvisions.server.red5.jsbridge.model.ConnectionStatistics;
 
 public class Red5JsBridgeUtilities {
 	
@@ -108,23 +112,32 @@ public class Red5JsBridgeUtilities {
 		alias.setSessionId(connection.getSessionId());
 		alias.setConnected(connection.isConnected());
 		alias.setConnectionParams(connection.getConnectParams());
-		alias.setDroppedMessages(connection.getDroppedMessages());
 		alias.setDuty(connection.getDuty().name());
 		alias.setEncoding(connection.getEncoding().name());
 		alias.setHost(connection.getHost());
 		alias.setLastPingTime(connection.getLastPingTime());
 		alias.setPath(connection.getPath());
-		alias.setPendingMessages(connection.getPendingMessages());
-		alias.setProtocol(connection.getProtocol());
-		alias.setReadBytes(connection.getReadBytes());
-		alias.setWrittenBytes(connection.getWrittenBytes());
-		alias.setReadMessages(connection.getReadMessages());
-		alias.setWrittenMessages(connection.getWrittenMessages());
 		alias.setRemoteAddress(connection.getRemoteAddress());
 		alias.setRemoteAddresses(connection.getRemoteAddresses());
 		alias.setRemotePort(connection.getRemotePort());
 		alias.setClassName(connection.getClass().getSimpleName());
 		
+		return alias;
+	}
+	
+	
+	
+	
+	
+	public static ConnectionStatistics toConnectionStatistics(IConnection connection){
+		
+		ConnectionStatistics alias = new ConnectionStatistics();
+		alias.setDroppedMessages(connection.getDroppedMessages());
+		alias.setPendingMessages(connection.getPendingMessages());
+		alias.setReadBytes(connection.getReadBytes());
+		alias.setWrittenBytes(connection.getWrittenBytes());
+		alias.setWrittenMessages(connection.getWrittenMessages());
+		alias.setReadMessages(connection.getReadMessages());
 		return alias;
 	}
 	
@@ -196,5 +209,18 @@ public class Red5JsBridgeUtilities {
 		return alias;
 	}
 	
+	
+	public static IConnection getConnectionById(MultiThreadedApplicationAdapter adapter, String sessionId) throws Exception{
+		
+		IScope appScope = adapter.getScope();
+		Set<IConnection>connections = appScope.getClientConnections();
+		for(IConnection connection: connections){
+			if(connection.getSessionId().equalsIgnoreCase(sessionId) && connection.isConnected()){
+				return connection;
+			}
+		}
+		
+		throw new Exception("Connection object not found");
+	}
 
 }

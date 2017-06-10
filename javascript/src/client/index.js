@@ -591,6 +591,20 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     
+    
+    /*
+    * Get connection statistics
+    */
+    getConnectionStatistics(connection){
+        var method = "getConnectionStatistics";
+        var parameters = [connection.sessionId];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
     /*
     * Get connection attributes
     */
