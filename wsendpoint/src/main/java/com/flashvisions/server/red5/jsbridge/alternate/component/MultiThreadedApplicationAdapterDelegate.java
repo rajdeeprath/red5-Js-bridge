@@ -24,6 +24,7 @@ import org.red5.server.api.scope.ScopeType;
 import org.red5.server.api.so.ISharedObject;
 import org.red5.server.api.so.ISharedObjectBase;
 import org.red5.server.api.so.ISharedObjectListener;
+import org.red5.server.api.statistics.IClientBroadcastStreamStatistics;
 import org.red5.server.api.stream.IBroadcastStream;
 import org.red5.server.api.stream.IStream;
 import org.red5.server.api.stream.IStreamPlaybackSecurity;
@@ -711,6 +712,28 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		IConnection connection = bStream.getConnection();
 		return toConnection(connection);
+	}
+	
+	
+	
+	
+	public Object getStreamStatistics(String name) throws IOException, ResourceNotFoundException, ResourceExistException {
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		IClientBroadcastStreamStatistics statistics = bStream.getStatistics();
+		return Red5JsBridgeUtilities.toBroadcastStreamStatistics(statistics);
+		
+	}
+	
+	
+	
+	public Object getStreamStatistics(String name, String scopePath) throws IOException, ResourceNotFoundException, ResourceExistException {
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		IClientBroadcastStreamStatistics statistics = bStream.getStatistics();
+		return Red5JsBridgeUtilities.toBroadcastStreamStatistics(statistics);
+		
 	}
 	
 	

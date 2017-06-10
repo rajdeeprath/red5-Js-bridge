@@ -1,10 +1,12 @@
 package com.flashvisions.server.red5.jsbridge.utils;
 
 import org.red5.server.api.scope.IScope;
+import org.red5.server.api.statistics.IClientBroadcastStreamStatistics;
 import org.red5.server.api.stream.ResourceNotFoundException;
 import org.red5.server.util.ScopeUtils;
 
 import com.flashvisions.server.red5.jsbridge.alternate.model.Scope;
+import com.flashvisions.server.red5.jsbridge.model.BroadcastStreamStatistics;
 
 public class Red5JsBridgeUtilities {
 	
@@ -73,6 +75,20 @@ public class Red5JsBridgeUtilities {
         }
         
         return roomScope;
+	}
+	
+	
+	
+	
+	public static BroadcastStreamStatistics toBroadcastStreamStatistics(IClientBroadcastStreamStatistics statistics) {
+		
+		BroadcastStreamStatistics alias = new BroadcastStreamStatistics();
+		alias.setPublishedName(statistics.getPublishedName());
+		alias.setTotalSubscribers(statistics.getTotalSubscribers());
+		alias.setMaxSubscribers(statistics.getMaxSubscribers());
+		alias.setActiveSubscribers(statistics.getActiveSubscribers());
+		alias.setBytesReceived(statistics.getBytesReceived());
+		return alias;
 	}
 
 }
