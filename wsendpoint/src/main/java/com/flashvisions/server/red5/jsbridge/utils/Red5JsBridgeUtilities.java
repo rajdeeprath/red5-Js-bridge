@@ -26,18 +26,25 @@ public class Red5JsBridgeUtilities {
 	public static IScope fromScope(IScope appScope, Scope scope) throws ResourceNotFoundException {
 		
 		String path = scope.getPath();
-		if(appScope.getPath().equals(path)){
+		String appScopePath = appScope.getPath() + "/" + appScope.getName();
+		if(appScopePath.equalsIgnoreCase(appScopePath) || appScope.getPath().equals(path))
+		{
 			return appScope;
 		}
-		
-		String appScopePath = appScope.getPath() + "/" + appScope.getName() + "/";
-		if(path.contains(appScopePath)){
+		else if(path.contains(appScopePath))
+		{
 			path = path.replace(appScopePath, "");
 		}
 		
+		if(path.startsWith("/")){
+			path = path.replace("/", "");
+		}
+		
 		IScope roomScope = ScopeUtils.resolveScope(appScope, scope.getPath());
-        if (roomScope == null)
+        if (roomScope == null){
             throw new ResourceNotFoundException("Scope for path" + scope.getPath() +" could not be resolved.");
+        }
+        
         return roomScope;
 	}
 	
@@ -46,18 +53,25 @@ public class Red5JsBridgeUtilities {
 	
 	public static IScope fromScopePath(IScope appScope, String path) throws ResourceNotFoundException {
 		
-		if(appScope.getPath().equals(path)){
+		String appScopePath = appScope.getPath() + "/" + appScope.getName();
+		if(appScopePath.equalsIgnoreCase(path) || appScope.getPath().equals(path))
+		{
 			return appScope;
 		}
-		
-		String appScopePath = appScope.getPath() + "/" + appScope.getName() + "/";
-		if(path.contains(appScopePath)){
+		else if(path.contains(appScopePath))
+		{
 			path = path.replace(appScopePath, "");
 		}
 		
+		if(path.startsWith("/")){
+			path = path.replace("/", "");
+		}
+		
 		IScope roomScope = ScopeUtils.resolveScope(appScope, path);
-        if (roomScope == null)
+        if (roomScope == null){
             throw new ResourceNotFoundException("Scope for path" + path +" could not be resolved.");
+        }
+        
         return roomScope;
 	}
 

@@ -748,8 +748,14 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     * Check if broadcast stream exists at a particular scope
     */
     hasBroadcastStream(name, scope) {
+        var parameters;
+        if(!scope){
+            parameters = [name];
+        }else{
+            parameters = [name, this._getFullScopePath(scope)];    
+        }
+        
         var method = "hasBroadcastStream";
-        var parameters = [name, scope.path];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }  
@@ -801,7 +807,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     */
     recordStart(name, scope, saveAs, overWrite) {
         var method = "recordStart";
-        var parameters = [name, scope.path, saveAs, overWrite];
+        var parameters = [name, this._getFullScopePath(scope), saveAs, overWrite];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -815,7 +821,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     */
     recordStop(name, scope) {
         var method = "recordStop";
-        var parameters = [name, scope.path];
+        var parameters = [name, this._getFullScopePath(scope)];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -867,6 +873,14 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     }
 
 
+    
+    
+    /* Returns Delayed Promnise */
+    delayPromise(ms) {
+      return function(x) {
+        return new Promise(resolve => setTimeout(() => resolve(x), ms));
+      };
+    }
 
     
 
@@ -1247,15 +1261,21 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
         bridge.getScope(stream.scopePath).then(function(scope){
             
             console.log("stream scope  " + JSON.stringify(scope));
-            
-            bridge.getChildScopeNames().then(function(result){
-                
-                console.log("scope names  " + JSON.stringify(result));
-                
+            bridge.recordStart(stream.publishedName, scope, "test", false).then(function(result){
+                console.log("recordStart done " + JSON.stringify(result));
+                return result;
+            })
+            .then(bridge.delayPromise(10000)).then(function(result){
+                   bridge.recordStop(stream.publishedName, scope).then(function(res){
+                        console.log("recordStop done " + JSON.stringify(result));                
+                   })                                
+                   .catch(function(err){
+                        console.log("error " + err);
+                   });                                                   
             })
             .catch(function(error){
                 console.log("error " + err);
-            });            
+            });  
         })
         .catch(function(err){
             

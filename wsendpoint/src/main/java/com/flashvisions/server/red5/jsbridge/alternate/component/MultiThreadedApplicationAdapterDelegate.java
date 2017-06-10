@@ -639,7 +639,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		if(!bStream.isRecording()){
-			bStream.stopRecording();
+			bStream.saveAs(saveAs, !overWrite);
 		}
 	}
 	
@@ -649,7 +649,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		if(!bStream.isRecording()){
-			bStream.stopRecording();
+			bStream.saveAs(saveAs, !overWrite);
 		}
 	}
 	
