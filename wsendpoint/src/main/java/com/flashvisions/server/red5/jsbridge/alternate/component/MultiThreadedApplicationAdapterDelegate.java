@@ -681,6 +681,22 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
+	public void closeStream(String name) throws IOException, ResourceNotFoundException, ResourceExistException {
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		bStream.close();
+	}
+	
+	
+	public void closeStream(String name, String scopePath) throws IOException, ResourceNotFoundException, ResourceExistException {
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		bStream.close();
+	}
+	
+	
+	
 	/****************************************************
 	 * 
 	 * RED5-JS SHARED OBJECT API

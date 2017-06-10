@@ -830,6 +830,19 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     /*
+    * Close stream
+    */
+    closeStream(name, scope) {
+        var method = "closeStream";
+        var parameters = [name, this._getFullScopePath(scope)];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
     * Check if stream is recording
     */
     isRecording(name, scope){
