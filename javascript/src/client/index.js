@@ -693,6 +693,57 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     
+     /*
+    * Get child scope names inside a scope
+    */
+    getChildScopeNames(){
+        var method = "getChildScopeNames";
+        var parameters = [];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Get application scope
+    */
+    getApplicationScope() {
+        var method = "getApplicationScope";
+        var parameters = [];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Get scope object for path
+    */
+    getScope(path) {
+        var method = "getScope";
+        var parameters = [path];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    /*
+    * Get root scope object for path
+    */
+    getRootScope(scope) {
+        var method = "getRootScope";
+        var parameters = [this._getFullScopePath(scope)];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+
+    
+    
+    
     /*
     * Check if broadcast stream exists at a particular scope
     */
@@ -710,8 +761,15 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     * Get broadcast stream
     */
     getBroadcastStream(name, scope) {
+        
+        var parameters;
+        if(!scope){
+            parameters = [name];
+        }else{
+            parameters = [name, this._getFullScopePath(scope)];    
+        }
+        
         var method = "getBroadcastStream";
-        var parameters = [name, scope.path];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -723,8 +781,14 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     * Get all broadcast streams in a scope
     */
     getBroadcastStreamNames(scope) {
+        
+        var parameters;
+        if(!scope){
+            parameters = [];
+        }else{
+            parameters = [this._getFullScopePath(scope)];    
+        }
         var method = "getBroadcastStreamNames";
-        var parameters = [scope.path];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -735,9 +799,23 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Record a stream
     */
-    recordStream(name, scope, saveAs, overWrite) {
-        var method = "recordStream";
-        var parameters = [name, scope, saveAs, overWrite];
+    recordStart(name, scope, saveAs, overWrite) {
+        var method = "recordStart";
+        var parameters = [name, scope.path, saveAs, overWrite];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    
+    /*
+    * Stop Record of a stream
+    */
+    recordStop(name, scope) {
+        var method = "recordStop";
+        var parameters = [name, scope.path];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -777,6 +855,15 @@ class Red5JsBridgedApplication extends Red5JsBridge {
                 throw new Error("Unexpected param type.");
             }
         }
+    }
+    
+    
+    
+    
+    
+    /* Returns full scope path with name */
+    _getFullScopePath(scope){
+        return scope.path + "/" + scope.name;
     }
 
 
@@ -1079,8 +1166,7 @@ bridge.on('bridge.ready', function(id){
 bridge.connect();
 */
     
-    
-    
+var roomscope;    
 var bridge = new Red5JsBridgedApplication({debug: true}, {
     
     "appStart" : function(scope) {
@@ -1131,6 +1217,7 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
     },                                        
                                           
     "roomJoin" : function(connection, scope) {
+        roomscope = scope;
         console.log("roomJoin");
     },
 
@@ -1154,19 +1241,37 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
         console.log("appStop");
     },
     
-    "streamBroadcastStart" : function(stream) {
+    "streamBroadcastStart" : function(connection, stream) {
         console.log("streamBroadcastStart");
+        
+        bridge.getScope(stream.scopePath).then(function(scope){
+            
+            console.log("stream scope  " + JSON.stringify(scope));
+            
+            bridge.getChildScopeNames().then(function(result){
+                
+                console.log("scope names  " + JSON.stringify(result));
+                
+            })
+            .catch(function(error){
+                console.log("error " + err);
+            });            
+        })
+        .catch(function(err){
+            
+            console.log("error " + err);
+        });
     },
     
-    "streamBroadcastClose" : function(stream) {
+    "streamBroadcastClose" : function(connection, stream) {
         console.log("streamBroadcastClose");
     },
     
-    "streamSubscriberStart" : function(stream) {
+    "streamSubscriberStart" : function(connection, stream) {
         console.log("streamSubscriberStart");
     },
     
-    "streamSubscriberClose" : function(stream) {
+    "streamSubscriberClose" : function(connection, stream) {
          console.log("streamSubscriberClose");
     }
                                           

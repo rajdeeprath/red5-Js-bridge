@@ -51,6 +51,7 @@ import com.flashvisions.server.red5.jsbridge.model.ConnectionStreamEvent;
 import com.flashvisions.server.red5.jsbridge.model.ScopeConnectionEvent;
 import com.flashvisions.server.red5.jsbridge.model.SharedObjectSend;
 import com.flashvisions.server.red5.jsbridge.model.SharedObjectUpdate;
+import com.flashvisions.server.red5.jsbridge.utils.Red5JsBridgeUtilities;
 
 public class MultiThreadedApplicationAdapterDelegate implements IApplication, IStreamPublishSecurity, IStreamPlaybackSecurity {
 	
@@ -483,6 +484,31 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	 ****************************************************/
 
 	
+	public Set<String> getChildScopeNames(){
+		return appAdapter.getChildScopeNames();
+	}
+	
+	
+	
+	public Scope getApplicationScope() throws ResourceNotFoundException{
+		return Red5JsBridgeUtilities.toScope(appScope);
+	}	
+	
+	
+	
+	public Scope getScope(String scopePath) throws ResourceNotFoundException{
+		IScope scope = Red5JsBridgeUtilities.fromScopePath(appScope, scopePath);
+		return Red5JsBridgeUtilities.toScope(scope);
+	}
+	
+	
+	
+	public Scope getRootScope(String scopePath) throws ResourceNotFoundException{
+		IScope scope = Red5JsBridgeUtilities.fromScopePath(appScope, scopePath);
+		IScope root = scope = ScopeUtils.findRoot(scope);
+		return Red5JsBridgeUtilities.toScope(root);
+	}
+	
 	
 	
 	
@@ -571,21 +597,23 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 
 	
 	public boolean hasBroadcastStream(String name, String scopePath) throws ResourceNotFoundException {
-		IScope subScope = fromScopePath(scopePath);
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
 		return appAdapter.hasBroadcastStream(subScope, name);
 	}
 	
 	
-	public BroadcastStream getBroadcastStream(String name) {		
+	public BroadcastStream getBroadcastStream(String name) throws ResourceNotFoundException {		
 		BroadcastStream stream = toBroadcastStream(appAdapter.getBroadcastStream(appScope, name));
+		if(stream == null) throw new ResourceNotFoundException("Stream not found");
 		return stream;
 	}
 
 	
 
 	public BroadcastStream getBroadcastStream(String name, String scopePath) throws ResourceNotFoundException {
-		IScope subScope = fromScopePath(scopePath);
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
 		BroadcastStream stream = toBroadcastStream(appAdapter.getBroadcastStream(subScope, name));
+		if(stream == null) throw new ResourceNotFoundException("Stream not found");
 		return stream;
 	}
 
@@ -596,7 +624,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 
 	
 	public Set<String> getBroadcastStreamNames(String scopePath) throws ResourceNotFoundException {
-		IScope subScope = fromScopePath(scopePath);
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
 		return appAdapter.getBroadcastStreamNames(subScope);
 	}
 
@@ -608,33 +636,35 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	public void recordStart(String name, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
-		IBroadcastStream bStream = appAdapter.getBroadcastStream(appScope, name);
-		if(bStream != null){
-			bStream.saveAs(saveAs, !overWrite);
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		if(!bStream.isRecording()){
+			bStream.stopRecording();
 		}
 	}
 	
 	
 	public void recordStart(String name, String scopePath, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
-		IScope subScope = fromScopePath(scopePath);
-		IBroadcastStream bStream = appAdapter.getBroadcastStream(subScope, name);
-		if(bStream != null){
-			bStream.saveAs(saveAs, !overWrite);
-		}
-	}
-	
-	
-	public void recordStop(String name, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
-		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		if(!bStream.isRecording()){
-			bStream.saveAs(saveAs, !overWrite);
+			bStream.stopRecording();
 		}
 	}
 	
 	
-	public void recordStop(String name, String scopePath, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
-		IScope subScope = fromScopePath(scopePath);
+	public void recordStop(String name) throws IOException, ResourceNotFoundException, ResourceExistException {
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		if(bStream.isRecording()){
+			bStream.stopRecording();
+		}
+	}
+	
+	
+	public void recordStop(String name, String scopePath) throws IOException, ResourceNotFoundException, ResourceExistException {
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		if(bStream.isRecording()){
@@ -668,7 +698,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 
 	public boolean createSharedObject(Scope scope, String name, boolean persistent) throws ResourceNotFoundException {
-		IScope target = this.fromScope(scope);
+		IScope target = Red5JsBridgeUtilities.fromScope(appScope, scope);
 		ISharedObject so = null;
 		
 		so = appAdapter.getSharedObject(target, name);
@@ -711,7 +741,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	public SharedObject getSharedObject(Scope scope, String name) throws IOException, ResourceNotFoundException {
 		
 		ISharedObject so = null;
-		IScope subScope = fromScope(scope);
+		IScope subScope = Red5JsBridgeUtilities.fromScope(appScope, scope);
 		
 		so = appAdapter.getSharedObject(subScope, name);
 		
@@ -765,7 +795,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	public SharedObject getSharedObject(Scope scope, String name, boolean persistent) throws IOException, ResourceNotFoundException {
 		
 		ISharedObject so = null;
-		IScope subScope = fromScope(scope);
+		IScope subScope = Red5JsBridgeUtilities.fromScope(appScope, scope);
 		
 		so = appAdapter.getSharedObject(subScope, name);
 		
@@ -794,7 +824,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	public Set<String> getSharedObjectNames(Scope scope) throws ResourceNotFoundException {
-		IScope subScope = fromScope(scope);
+		IScope subScope = Red5JsBridgeUtilities.fromScope(appScope, scope);
 		return appAdapter.getSharedObjectNames(subScope);
 	}
 	
@@ -807,7 +837,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	public boolean hasSharedObject(Scope scope, String name) throws ResourceNotFoundException {
-		IScope subScope = fromScope(scope);
+		IScope subScope = Red5JsBridgeUtilities.fromScope(appScope, scope);
 		return appAdapter.hasSharedObject(subScope, name);
 	}
 	
@@ -818,7 +848,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	public boolean clearSharedObjects(Scope scope, String name) throws ResourceNotFoundException {
-		IScope subScope = fromScope(scope);
+		IScope subScope = Red5JsBridgeUtilities.fromScope(appScope, scope);
 		return appAdapter.clearSharedObjects(subScope, name);
 	}
 	
@@ -834,7 +864,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	public void registerSharedObjectForEvents(SharedObject so) throws ResourceNotFoundException, IOException{
 		
-		IScope target = this.fromScopePath(so.getPath());
+		IScope target = Red5JsBridgeUtilities.fromScopePath( appScope, so.getPath());
 		ISharedObject sharedObject = appAdapter.getSharedObject(target, so.getName());
 		
 		if(sharedObject == null)
@@ -861,7 +891,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	public void unRegisterSharedObjectForEvents(SharedObject so) throws ResourceNotFoundException, IOException{
 		
-		IScope target = this.fromScopePath(so.getPath());
+		IScope target = Red5JsBridgeUtilities.fromScopePath( appScope, so.getPath());
 		ISharedObject sharedObject = appAdapter.getSharedObject(target, so.getName());
 		
 		if(sharedObject != null)
@@ -954,7 +984,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	private ISharedObject fromSharedObject(SharedObject so) throws ResourceNotFoundException, IOException 
 	{
 		ISharedObject object = appAdapter.getSharedObject(appScope, so.getName());
-		IScope scope = this.fromScopePath(so.getPath());
+		IScope scope = Red5JsBridgeUtilities.fromScopePath(appScope, so.getPath());
 		
 		if(object == null)
 		{
@@ -982,7 +1012,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		BroadcastStream alias = new BroadcastStream();
 		alias.setName(stream.getName());
 		alias.setCreationTime(stream.getCreationTime());
-		alias.setScopePath(stream.getScope().getPath());
+		alias.setScopePath(stream.getScope().getPath() + "/" + stream.getScope().getName());
 		alias.setPublishedName(stream.getPublishedName());
 		alias.setSaveFilename(stream.getSaveFilename());
 		alias.setStartTime(stream.getStartTime());
@@ -999,7 +1029,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		alias.setName(stream.getName());
 		alias.setBroadcastStreamPublishName(stream.getBroadcastStreamPublishName());
 		alias.setCreationTime(stream.getCreationTime());
-		alias.setScopePath(stream.getScope().getPath());
+		alias.setScopePath(stream.getScope().getPath() + "/" + stream.getScope().getName());
 		alias.setPaused(stream.isPaused());
 		alias.setState(stream.getState().name());
 		alias.setStartTime(stream.getStartTime());
@@ -1016,7 +1046,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		Stream alias = new Stream();
 		alias.setName(stream.getName());
 		alias.setCreationTime(stream.getCreationTime());
-		alias.setScopePath(stream.getScope().getPath());
+		alias.setScopePath(stream.getScope().getPath() + "/" + stream.getScope().getName());
 		alias.setStartTime(stream.getStartTime());
 		
 		return alias;
@@ -1042,22 +1072,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
-	private IScope fromScope(Scope scope) throws ResourceNotFoundException {
-		IScope roomScope = ScopeUtils.resolveScope(appScope, scope.getPath());
-        if (roomScope == null)
-            throw new ResourceNotFoundException("Scope for path" + scope.getPath() +" could not be resolved.");
-        return roomScope;
-	}
 	
-	
-	
-	
-	private IScope fromScopePath(String path) throws ResourceNotFoundException {
-		IScope roomScope = ScopeUtils.resolveScope(appScope, path);
-        if (roomScope == null)
-            throw new ResourceNotFoundException("Scope for path" + path +" could not be resolved.");
-        return roomScope;
-	}
 	
 	
 	
