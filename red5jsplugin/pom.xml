@@ -1,0 +1,145 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <groupId>org.red5</groupId>
+	<artifactId>red5-js</artifactId>
+	<version>1.0.0</version>
+    <modelVersion>4.0.0</modelVersion>    
+    <packaging>jar</packaging>
+    <name>red5-js-plugin</name>
+    <url>https://github.com/rajdeeprath/red5-js-bridge/red5jsplugin</url>
+    <description>Red5 javascript bridge</description>
+    <developers>
+        <!--  TO DO -->
+    </developers>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <skipTests>true</skipTests>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.build.timestamp.format>MM.dd.yyyy HH:mm</maven.build.timestamp.format>
+        <timestamp>${maven.build.timestamp}</timestamp>
+        <cauldron.version>2.1.2</cauldron.version>
+        <red5.version>1.0.9-M10</red5.version>
+        <red5-websocket.version>1.9</red5-websocket.version>
+        <mina.version>2.0.16</mina.version>
+        <spring.version>4.3.2.RELEASE</spring.version>
+        <tomcat.version>8.5.11</tomcat.version>
+        <httpcomponents.version>4.5</httpcomponents.version>
+        <gson.version>2.3.1</gson.version>
+        <junit.version>4.12</junit.version>
+        <bc.version>1.55</bc.version>
+        <jcodec.version>0.2</jcodec.version>
+    </properties>
+    <build>
+        <defaultGoal>package</defaultGoal>
+        <plugins>
+			<plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.6.1</version>
+                    <configuration>
+                        <fork>true</fork>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                    </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Build-OS>${os.name} ${os.version}</Build-OS>
+                            <Build-Java>Java ${java.version}</Build-Java>
+                            <!-- Build number comes from git commit and is updated via profile -->
+                            <Build-Number>${buildNumber}</Build-Number>
+                            <Pluginator-Version>${project.version} - ${buildNumber} (on: ${timestamp})</Pluginator-Version>
+                            <!-- Remove this when we switch it to a Pro-plugin -->
+                            <Red5-Plugin-Main-Class>com.flashvisions.server.red5.plugin.api.Red5JsPlugin</Red5-Plugin-Main-Class>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>3.0.1</version>
+				<extensions>true</extensions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<useReleaseProfile>false</useReleaseProfile>
+					<releaseProfiles>release</releaseProfiles>
+					<goals>deploy</goals>
+				</configuration>
+			</plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        
+        <dependency>
+            <groupId>org.red5</groupId>
+            <artifactId>red5-server</artifactId>
+            <version>${red5.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.red5</groupId>
+                    <artifactId>red5-service</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.red5</groupId>
+            <artifactId>red5-server-common</artifactId>
+            <version>${red5.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.mina</groupId>
+                    <artifactId>mina-integration-beans</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.mina</groupId>
+                    <artifactId>mina-integration-jmx</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.red5</groupId>
+            <artifactId>red5-io</artifactId>
+            <version>${red5.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.mina</groupId>
+                    <artifactId>mina-integration-beans</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.mina</groupId>
+                    <artifactId>mina-integration-jmx</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <artifactId>mina-core</artifactId>
+            <groupId>org.apache.mina</groupId>
+            <version>${mina.version}</version>
+        </dependency>
+    </dependencies>
+</project>
