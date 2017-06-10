@@ -696,6 +696,24 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	}
 	
 	
+	public Connection getStreamConnection(String name) throws IOException, ResourceNotFoundException, ResourceExistException {
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		IConnection connection = bStream.getConnection();
+		return toConnection(connection);
+	}
+	
+	
+	
+	public Connection getStreamConnection(String name, String scopePath) throws IOException, ResourceNotFoundException, ResourceExistException {
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		IConnection connection = bStream.getConnection();
+		return toConnection(connection);
+	}
+	
+	
 	
 	/****************************************************
 	 * 
