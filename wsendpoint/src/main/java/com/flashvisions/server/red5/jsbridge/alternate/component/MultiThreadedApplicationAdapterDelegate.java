@@ -638,9 +638,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	public void recordStart(String name, String saveAs, boolean overWrite) throws IOException, ResourceNotFoundException, ResourceExistException {
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
-		if(!bStream.isRecording()){
-			bStream.saveAs(saveAs, !overWrite);
-		}
+		bStream.saveAs(saveAs, !overWrite);
 	}
 	
 	
@@ -648,18 +646,14 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
-		if(!bStream.isRecording()){
-			bStream.saveAs(saveAs, !overWrite);
-		}
+		bStream.saveAs(saveAs, !overWrite);
 	}
 	
 	
 	public void recordStop(String name) throws IOException, ResourceNotFoundException, ResourceExistException {
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
-		if(bStream.isRecording()){
-			bStream.stopRecording();
-		}
+		bStream.stopRecording();
 	}
 	
 	
@@ -667,9 +661,22 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
-		if(bStream.isRecording()){
-			bStream.stopRecording();
-		}
+		bStream.stopRecording();
+	}
+	
+	
+	public boolean isRecording(String name) throws IOException, ResourceNotFoundException, ResourceExistException {
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		return bStream.isRecording();
+	}
+	
+	
+	public boolean isRecording(String name, String scopePath) throws IOException, ResourceNotFoundException, ResourceExistException {
+		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
+		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
+		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
+		return bStream.isRecording();
 	}
 	
 	

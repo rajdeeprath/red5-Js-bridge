@@ -830,6 +830,19 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     /*
+    * Check if stream is recording
+    */
+    isRecording(name, scope){
+        var method = "isRecording";
+        var parameters = [name, this._getFullScopePath(scope)];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
     * Get stream length
     */
     getStreamLength(name) {
