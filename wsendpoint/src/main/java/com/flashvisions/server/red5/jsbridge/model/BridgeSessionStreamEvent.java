@@ -1,7 +1,5 @@
 package com.flashvisions.server.red5.jsbridge.model;
 
-import com.flashvisions.server.red5.jsbridge.alternate.model.BroadcastStream;
-import com.flashvisions.server.red5.jsbridge.alternate.model.Connection;
 import com.flashvisions.server.red5.jsbridge.alternate.model.Scope;
 
 public class BridgeSessionStreamEvent {

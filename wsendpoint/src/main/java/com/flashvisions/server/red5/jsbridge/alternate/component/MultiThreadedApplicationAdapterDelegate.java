@@ -29,7 +29,6 @@ import org.red5.server.api.stream.IBroadcastStream;
 import org.red5.server.api.stream.IStream;
 import org.red5.server.api.stream.IStreamPlaybackSecurity;
 import org.red5.server.api.stream.IStreamPublishSecurity;
-import org.red5.server.api.stream.ISubscriberStream;
 import org.red5.server.api.stream.ResourceExistException;
 import org.red5.server.api.stream.ResourceNotFoundException;
 import org.red5.server.messaging.IPipeConnectionListener;
@@ -42,10 +41,9 @@ import com.flashvisions.server.red5.jsbridge.alternate.model.BroadcastStream;
 import com.flashvisions.server.red5.jsbridge.alternate.model.Connection;
 import com.flashvisions.server.red5.jsbridge.alternate.model.Scope;
 import com.flashvisions.server.red5.jsbridge.alternate.model.SharedObject;
-import com.flashvisions.server.red5.jsbridge.alternate.model.Stream;
-import com.flashvisions.server.red5.jsbridge.alternate.model.SubscriberStream;
 import com.flashvisions.server.red5.jsbridge.interfaces.IJsBridge;
 import com.flashvisions.server.red5.jsbridge.listeners.JsBridgeConnection;
+import com.flashvisions.server.red5.jsbridge.model.BroadcastStreamStatistics;
 import com.flashvisions.server.red5.jsbridge.model.ConnectParamsEvent;
 import com.flashvisions.server.red5.jsbridge.model.ConnectionBroadcastStreamEvent;
 import com.flashvisions.server.red5.jsbridge.model.ConnectionStreamEvent;
@@ -137,7 +135,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	@Override
 	public boolean appStart(IScope app) {
 		// TODO Auto-generated method stub
-		bridge.broadcastEvent("application.appStart", this.toScope(app));
+		bridge.broadcastEvent("application.appStart", Red5JsBridgeUtilities.toScope(app));
 		return true;
 	}
 
@@ -154,7 +152,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			public void run() {
 				
 				ConnectParamsEvent notification = new ConnectParamsEvent();
-				notification.setConnection(toConnection(conn));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
 				notification.setParams(params);
 				
 				bridge.broadcastEvent("application.appConnect", notification);
@@ -179,8 +177,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			public void run() {
 				
 				ScopeConnectionEvent notification = new ScopeConnectionEvent();
-				notification.setConnection(toConnection(conn));
-				notification.setScope(toScope(app));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
+				notification.setScope(Red5JsBridgeUtilities.toScope(app));
 				
 				bridge.broadcastEvent("application.appJoin", notification);
 			}
@@ -202,7 +200,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			@Override
 			public void run() {
 				
-				bridge.broadcastEvent("application.appDisconnect", toConnection(conn));
+				bridge.broadcastEvent("application.appDisconnect", Red5JsBridgeUtilities.toConnection(conn));
 			}
 			
 		});
@@ -224,8 +222,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			public void run() {
 				
 				ScopeConnectionEvent notification = new ScopeConnectionEvent();
-				notification.setConnection(toConnection(conn));
-				notification.setScope(toScope(app));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
+				notification.setScope(Red5JsBridgeUtilities.toScope(app));
 				
 				bridge.broadcastEvent("application.appLeave", notification);
 			}
@@ -247,7 +245,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			@Override
 			public void run() {
 				
-				bridge.broadcastEvent("application.appStop", toScope(app));
+				bridge.broadcastEvent("application.appStop", Red5JsBridgeUtilities.toScope(app));
 			}
 			
 		});
@@ -267,7 +265,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			@Override
 			public void run() {
 				
-				bridge.broadcastEvent("application.roomStart", toScope(room));
+				bridge.broadcastEvent("application.roomStart", Red5JsBridgeUtilities.toScope(room));
 			}
 			
 		});
@@ -287,7 +285,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			@Override
 			public void run() {
 				
-				Connection connection = toConnection(conn);
+				Connection connection = Red5JsBridgeUtilities.toConnection(conn);
 				ConnectParamsEvent notification = new ConnectParamsEvent();
 				notification.setConnection(connection);
 				notification.setParams(params);
@@ -316,8 +314,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			public void run() {
 				
 				ScopeConnectionEvent notification = new ScopeConnectionEvent();
-				notification.setConnection(toConnection(conn));
-				notification.setScope(toScope(room));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
+				notification.setScope(Red5JsBridgeUtilities.toScope(room));
 				
 				bridge.broadcastEvent("application.roomJoin", notification);
 				
@@ -338,7 +336,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 
 			@Override
 			public void run() {
-				bridge.broadcastEvent("application.roomDisconnect", toConnection(conn));
+				bridge.broadcastEvent("application.roomDisconnect", Red5JsBridgeUtilities.toConnection(conn));
 			}
 			
 		});
@@ -358,8 +356,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			@Override
 			public void run() {
 				ScopeConnectionEvent notification = new ScopeConnectionEvent();
-				notification.setConnection(toConnection(conn));
-				notification.setScope(toScope(room));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
+				notification.setScope(Red5JsBridgeUtilities.toScope(room));
 				
 				bridge.broadcastEvent("application.roomLeave", notification);
 			}
@@ -379,7 +377,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 
 			@Override
 			public void run() {
-				bridge.broadcastEvent("application.roomStop", toScope(room));
+				bridge.broadcastEvent("application.roomStop", Red5JsBridgeUtilities.toScope(room));
 			}
 			
 		});
@@ -398,8 +396,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			public void run() {
 				
 				ConnectionBroadcastStreamEvent notification = new ConnectionBroadcastStreamEvent();
-				notification.setConnection(toConnection(conn));
-				notification.setStream(toBroadcastStream(stream));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
+				notification.setStream(Red5JsBridgeUtilities.toBroadcastStream(stream));
 				
 				bridge.broadcastEvent("stream.publishStart", notification);
 			}
@@ -421,8 +419,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			public void run() {
 				
 				ConnectionBroadcastStreamEvent notification = new ConnectionBroadcastStreamEvent();
-				notification.setConnection(toConnection(conn));
-				notification.setStream(toBroadcastStream(stream));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
+				notification.setStream(Red5JsBridgeUtilities.toBroadcastStream(stream));
 				
 				bridge.broadcastEvent("stream.publishStop", notification);
 			}
@@ -443,8 +441,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			public void run() {
 				
 				ConnectionStreamEvent notification = new ConnectionStreamEvent();
-				notification.setConnection(toConnection(conn));
-				notification.setStream(toStream(stream));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
+				notification.setStream(Red5JsBridgeUtilities.toStream(stream));
 				
 				bridge.broadcastEvent("stream.subscribeStart", notification);
 			}
@@ -465,8 +463,8 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			public void run() {
 				
 				ConnectionStreamEvent notification = new ConnectionStreamEvent();
-				notification.setConnection(toConnection(conn));
-				notification.setStream(toStream(stream));
+				notification.setConnection(Red5JsBridgeUtilities.toConnection(conn));
+				notification.setStream(Red5JsBridgeUtilities.toStream(stream));
 				
 				bridge.broadcastEvent("stream.subscribeStop", notification);
 			}
@@ -526,7 +524,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		Set<IConnection> connections = appScope.getClientConnections();
 		List<Connection> aliases = new ArrayList<Connection>();
 		for(IConnection conn : connections){
-			aliases.add(this.toConnection(conn));
+			aliases.add(Red5JsBridgeUtilities.toConnection(conn));
 		}
 		
 		return aliases;
@@ -536,7 +534,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	public Connection getConnection(String sessionId) throws Exception {
 		IConnection connection = getConnectionById(sessionId);
-		return toConnection(connection);
+		return Red5JsBridgeUtilities.toConnection(connection);
 	}
 	
 	
@@ -604,7 +602,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	public BroadcastStream getBroadcastStream(String name) throws ResourceNotFoundException {		
-		BroadcastStream stream = toBroadcastStream(appAdapter.getBroadcastStream(appScope, name));
+		BroadcastStream stream = Red5JsBridgeUtilities.toBroadcastStream(appAdapter.getBroadcastStream(appScope, name));
 		if(stream == null) throw new ResourceNotFoundException("Stream not found");
 		return stream;
 	}
@@ -613,7 +611,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 
 	public BroadcastStream getBroadcastStream(String name, String scopePath) throws ResourceNotFoundException {
 		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
-		BroadcastStream stream = toBroadcastStream(appAdapter.getBroadcastStream(subScope, name));
+		BroadcastStream stream = Red5JsBridgeUtilities.toBroadcastStream(appAdapter.getBroadcastStream(subScope, name));
 		if(stream == null) throw new ResourceNotFoundException("Stream not found");
 		return stream;
 	}
@@ -701,7 +699,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		IConnection connection = bStream.getConnection();
-		return toConnection(connection);
+		return Red5JsBridgeUtilities.toConnection(connection);
 	}
 	
 	
@@ -711,13 +709,13 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		IConnection connection = bStream.getConnection();
-		return toConnection(connection);
+		return Red5JsBridgeUtilities.toConnection(connection);
 	}
 	
 	
 	
 	
-	public Object getStreamStatistics(String name) throws IOException, ResourceNotFoundException, ResourceExistException {
+	public BroadcastStreamStatistics getStreamStatistics(String name) throws IOException, ResourceNotFoundException, ResourceExistException {
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(appScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		IClientBroadcastStreamStatistics statistics = bStream.getStatistics();
@@ -727,7 +725,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
-	public Object getStreamStatistics(String name, String scopePath) throws IOException, ResourceNotFoundException, ResourceExistException {
+	public BroadcastStreamStatistics getStreamStatistics(String name, String scopePath) throws IOException, ResourceNotFoundException, ResourceExistException {
 		IScope subScope = Red5JsBridgeUtilities.fromScopePath( appScope, scopePath);
 		ClientBroadcastStream bStream = (ClientBroadcastStream) appAdapter.getBroadcastStream(subScope, name);
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
@@ -795,7 +793,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 		}
 		
-		return this.toSharedObject(so);
+		return Red5JsBridgeUtilities.toSharedObject(so);
 	}
 	
 	
@@ -822,7 +820,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 		}
 		
-		return this.toSharedObject(so);
+		return Red5JsBridgeUtilities.toSharedObject(so);
 	}
 
 	
@@ -849,7 +847,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 		}
 		
-		return this.toSharedObject(so);
+		return Red5JsBridgeUtilities.toSharedObject(so);
 	}
 	
 	
@@ -876,7 +874,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			}
 		}
 		
-		return this.toSharedObject(so);
+		return Red5JsBridgeUtilities.toSharedObject(so);
 	}
 
 	
@@ -990,61 +988,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
-	
-	
-	
-	
-	
-	private Connection toConnection(IConnection connection){
-		
-		Connection alias = new Connection();
-		alias.setSessionId(connection.getSessionId());
-		alias.setConnected(connection.isConnected());
-		alias.setConnectionParams(connection.getConnectParams());
-		alias.setDroppedMessages(connection.getDroppedMessages());
-		alias.setDuty(connection.getDuty().name());
-		alias.setEncoding(connection.getEncoding().name());
-		alias.setHost(connection.getHost());
-		alias.setLastPingTime(connection.getLastPingTime());
-		alias.setPath(connection.getPath());
-		alias.setPendingMessages(connection.getPendingMessages());
-		alias.setProtocol(connection.getProtocol());
-		alias.setReadBytes(connection.getReadBytes());
-		alias.setWrittenBytes(connection.getWrittenBytes());
-		alias.setReadMessages(connection.getReadMessages());
-		alias.setWrittenMessages(connection.getWrittenMessages());
-		alias.setRemoteAddress(connection.getRemoteAddress());
-		alias.setRemoteAddresses(connection.getRemoteAddresses());
-		alias.setRemotePort(connection.getRemotePort());
-		alias.setClassName(connection.getClass().getSimpleName());
-		
-		return alias;
-	}
-	
-	
-	
-	
-	private SharedObject toSharedObject(ISharedObject so) 
-	{
-		SharedObject alias = new SharedObject();
-		alias.setName(so.getName());
-		alias.setPath(so.getPath());
-		alias.setType(so.getType().name());
-		alias.setAcquired(so.isAcquired());
-		alias.setDepth(so.getDepth());
-		alias.setPersistent(so.isPersistent());
-		alias.setVersion(so.getVersion());
-		alias.setValid(so.isValid());
-		alias.setLocked(so.isLocked());
-		alias.setData(so.getData());
-		
-		return alias;
-	}
-	
-	
-	
-	
-	
+
 	private ISharedObject fromSharedObject(SharedObject so) throws ResourceNotFoundException, IOException 
 	{
 		ISharedObject object = appAdapter.getSharedObject(appScope, so.getName());
@@ -1068,76 +1012,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		return object;
 	}
 	
-	
-	
-	
-	private BroadcastStream toBroadcastStream(IBroadcastStream stream) 
-	{
-		BroadcastStream alias = new BroadcastStream();
-		alias.setName(stream.getName());
-		alias.setCreationTime(stream.getCreationTime());
-		alias.setScopePath(stream.getScope().getPath() + "/" + stream.getScope().getName());
-		alias.setPublishedName(stream.getPublishedName());
-		alias.setSaveFilename(stream.getSaveFilename());
-		alias.setStartTime(stream.getStartTime());
 		
-		return alias;
-	}
-	
-	
-	
-	
-	private SubscriberStream toSubscribeStream(ISubscriberStream stream) 
-	{
-		SubscriberStream alias = new SubscriberStream();
-		alias.setName(stream.getName());
-		alias.setBroadcastStreamPublishName(stream.getBroadcastStreamPublishName());
-		alias.setCreationTime(stream.getCreationTime());
-		alias.setScopePath(stream.getScope().getPath() + "/" + stream.getScope().getName());
-		alias.setPaused(stream.isPaused());
-		alias.setState(stream.getState().name());
-		alias.setStartTime(stream.getStartTime());
-		
-		return alias;
-	}
-	
-	
-	
-	
-	
-	private Stream toStream(IStream stream) 
-	{
-		Stream alias = new Stream();
-		alias.setName(stream.getName());
-		alias.setCreationTime(stream.getCreationTime());
-		alias.setScopePath(stream.getScope().getPath() + "/" + stream.getScope().getName());
-		alias.setStartTime(stream.getStartTime());
-		
-		return alias;
-	}
-	
-	
-	
-	
-	private Scope toScope(IScope scope)
-	{
-		Scope alias = new Scope();
-		alias.setName(scope.getName());
-		alias.setPath(scope.getPath());
-		alias.setContextPath(scope.getContextPath());
-		alias.setDepth(scope.getDepth());
-		alias.setValid(scope.isValid());
-		alias.setType(scope.getType().name());
-		//alias.setAttributes(scope.getAttributes());
-		
-		return alias;
-	}
-	
-	
-	
-	
-	
-	
 	
 	
 	
@@ -1164,7 +1039,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			
 			SharedObjectUpdate update = new SharedObjectUpdate();
 			ISharedObject source = (ISharedObject) so;
-			update.setSo(toSharedObject(source));
+			update.setSo(Red5JsBridgeUtilities.toSharedObject(source));
 			update.setData(values);
 			
 			bridge.broadcastEvent("sharedobject.sync", update);
@@ -1176,7 +1051,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			
 			SharedObjectUpdate update = new SharedObjectUpdate();
 			ISharedObject source = (ISharedObject) so;
-			update.setSo(toSharedObject(source));
+			update.setSo(Red5JsBridgeUtilities.toSharedObject(source));
 			update.setData(values.getAttributes());
 			
 			
@@ -1189,7 +1064,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 			// TODO Auto-generated method stub
 			SharedObjectUpdate update = new SharedObjectUpdate();
 			ISharedObject source = (ISharedObject) so;
-			update.setSo(toSharedObject(source));
+			update.setSo(Red5JsBridgeUtilities.toSharedObject(source));
 			update.setData(values);
 			
 			bridge.broadcastEvent("sharedobject.sync", update);
