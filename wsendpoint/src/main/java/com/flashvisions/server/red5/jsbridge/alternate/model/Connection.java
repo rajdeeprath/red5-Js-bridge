@@ -58,6 +58,9 @@ public class Connection {
 	
 	
 	private String protocol;
+	
+	
+	private String className;
 
 
 	public String getDuty() {
@@ -237,6 +240,16 @@ public class Connection {
 
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
+	}
+
+
+	public String getClassName() {
+		return className;
+	}
+
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 
 }

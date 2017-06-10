@@ -83,7 +83,6 @@ public class Red5JsBridgeUtilities {
 	public static BroadcastStreamStatistics toBroadcastStreamStatistics(IClientBroadcastStreamStatistics statistics) {
 		
 		BroadcastStreamStatistics alias = new BroadcastStreamStatistics();
-		alias.setPublishedName(statistics.getPublishedName());
 		alias.setTotalSubscribers(statistics.getTotalSubscribers());
 		alias.setMaxSubscribers(statistics.getMaxSubscribers());
 		alias.setActiveSubscribers(statistics.getActiveSubscribers());

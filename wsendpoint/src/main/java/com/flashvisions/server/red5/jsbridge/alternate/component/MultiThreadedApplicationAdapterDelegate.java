@@ -733,7 +733,6 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		if(bStream == null) throw new ResourceNotFoundException("Stream not found");
 		IClientBroadcastStreamStatistics statistics = bStream.getStatistics();
 		return Red5JsBridgeUtilities.toBroadcastStreamStatistics(statistics);
-		
 	}
 	
 	
@@ -1017,6 +1016,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		alias.setRemoteAddress(connection.getRemoteAddress());
 		alias.setRemoteAddresses(connection.getRemoteAddresses());
 		alias.setRemotePort(connection.getRemotePort());
+		alias.setClassName(connection.getClass().getSimpleName());
 		
 		return alias;
 	}

@@ -2,8 +2,6 @@ package com.flashvisions.server.red5.jsbridge.model;
 
 public class BroadcastStreamStatistics {
 	
-	String publishedName;
-	
 	int totalSubscribers;
 	
 	int maxSubscribers;
@@ -12,13 +10,7 @@ public class BroadcastStreamStatistics {
 	
 	long bytesReceived;
 
-	public String getPublishedName() {
-		return publishedName;
-	}
 
-	public void setPublishedName(String publishedName) {
-		this.publishedName = publishedName;
-	}
 
 	public int getTotalSubscribers() {
 		return totalSubscribers;
