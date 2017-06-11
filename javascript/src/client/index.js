@@ -564,100 +564,6 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     
-    /*
-    * Get all connections
-    */
-    getConnections() {
-        var method = "getConnections";
-        var parameters = [];
-        var request = this._createAPIRequest(method, parameters);
-        return this._send(request);
-    }
-    
-    
-    
-    
-    
-     /*
-    * Get connection by id
-    */
-    getConnection(id) {
-        var method = "getConnection";
-        var parameters = [id];
-        var request = this._createAPIRequest(method, parameters);
-        return this._send(request);
-    }
-    
-    
-    
-    
-    
-    /*
-    * Get connection statistics
-    */
-    getConnectionStatistics(connection){
-        var method = "getConnectionStatistics";
-        var parameters = [connection.sessionId];
-        var request = this._createAPIRequest(method, parameters);
-        return this._send(request);
-    }
-    
-    
-    
-    
-    /*
-    * Get connection attributes
-    */
-    getAtrributes(connection) {
-        var method = "getAtrributes";
-        var parameters = [connection.sessionId];
-        var request = this._createAPIRequest(method, parameters);
-        return this._send(request);
-    }
-    
-    
-    
-    
-    /*
-    * Get connection attribute
-    */
-    getAtrribute(connection, key) {
-        var method = "getAtrribute";
-        var parameters = [connection.sessionId, key];
-        var request = this._createAPIRequest(method, parameters);
-        return this._send(request);
-    }
-    
-    
-    
-    
-    /*
-    * Set connection attribute
-    */
-    addAtrribute(connection, key, value) {
-        var method = "addAtrribute";
-        var parameters = [connection.sessionId, key, value];
-        var request = this._createAPIRequest(method, parameters);
-        return this._send(request);
-    }
-    
-    
-    
-    
-    /*
-    * Set connection attributes
-    */
-    addAtrributes(connection, map) {
-        var method = "addAtrributes";
-        var parameters = [connection.sessionId, {type:"Map", value: this._map_to_object(map)}];
-        var request = this._createAPIRequest(method, parameters);
-        return this._send(request);
-    }
-    
-    
-    
-    
-    
     /**
      * Convert a `Map` to a standard
      * JS object recursively.
@@ -677,6 +583,109 @@ class Red5JsBridgedApplication extends Red5JsBridge {
         })
         return out
       }
+    
+    
+    
+    
+    /*
+    * Get all connections
+    */
+    getConnections() {
+        var method = "getConnections";
+        var parameters = [];
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }    
+    
+    
+    
+    
+     /*
+    * Get connection by sessionId
+    */
+    getConnection(sessionId) {
+        this._validateParameters(arguments, ['String'], 1, 1);
+        var parameters = [arguments[0]];
+        var method = "getConnection";        
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }    
+    
+    
+    
+    
+    /*
+    * Get connection statistics
+    */
+    getConnectionStatistics(connection){
+        this._validateParameters(arguments, ['{sessionId: String, ...}'], 1, 1);
+        var parameters = [arguments[0].sessionId];
+        var method = "getConnectionStatistics";
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Get connection attributes
+    */
+    getAtrributes(connection) {
+        this._validateParameters(arguments, ['{sessionId: String, ...}'], 1, 1);
+        var parameters = [arguments[0].sessionId];
+        var method = "getAtrributes";        
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Get connection attribute
+    */
+    getAtrribute(connection, key) {
+        this._validateParameters(arguments, ['{sessionId: String, ...}', 'String'], 2, 2);
+        var parameters = [arguments[0].sessionId, arguments[1]];
+        var method = "getAtrribute";        
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Set connection attribute
+    */
+    addAtrribute(connection, key, value) {
+        this._validateParameters(arguments, ['{sessionId: String, ...}', 'String', 'Number | String | Boolean'], 3, 3);
+        var parameters = [arguments[0].sessionId, arguments[1], arguments[2]];
+        var method = "addAtrribute";        
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
+    * Set connection attributes
+    */
+    addAtrributes(connection, map) {
+        this._validateParameters(arguments, ['{sessionId: String, ...}', 'Map'], 2, 2);
+        var parameters = [arguments[0].sessionId, {type:"Map", value: this._map_to_object(arguments[1])}];
+        var method = "addAtrributes";
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    
+    
 
     
     
@@ -685,8 +694,9 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     * Disconnect connection
     */
     disconnect(connection) {
-        var method = "disconnect";
-        var parameters = [connection.sessionId];
+        this._validateParameters(arguments, ['{sessionId: String, ...}'], 1, 1);
+        var parameters = [arguments[0].sessionId];
+        var method = "disconnect";        
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -698,8 +708,9 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     * Ping connection
     */
     ping(connection) {
+        this._validateParameters(arguments, ['{sessionId: String, ...}'], 1, 1);
+        var parameters = [arguments[0].sessionId];
         var method = "ping";
-        var parameters = [connection.sessionId];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -737,8 +748,9 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     * Get scope object for path
     */
     getScope(path) {
+        this._validateParameters(arguments, ['String'], 1, 1);
+        var parameters = [arguments[0]];
         var method = "getScope";
-        var parameters = [path];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -749,8 +761,9 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     * Get root scope object for a given scope
     */
     getRootScope(scope) {
+        this._validateParameters(arguments, ['{name: String, path: String}'], 1, 1);
         var method = "getRootScope";
-        var parameters = [this._getFullScopePath(scope)];
+        var parameters = [this._getFullScopePath(arguments[0])];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -761,12 +774,15 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Check if broadcast stream exists at a particular scope
     */
-    hasBroadcastStream(name, scope) {
+    hasBroadcastStream(name, scope=undefined) {
+        
+        this._validateParameters(arguments, ['String', '{name: String, path: String}'], 1, 2);
+        
         var parameters;
         if(!scope){
-            parameters = [name];
+            parameters = [arguments[0]];
         }else{
-            parameters = [name, this._getFullScopePath(scope)];    
+            parameters = [arguments[0], this._getFullScopePath(arguments[1])];    
         }
         
         var method = "hasBroadcastStream";
@@ -780,13 +796,15 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Get broadcast stream
     */
-    getBroadcastStream(name, scope) {
+    getBroadcastStream(name, scope=undefined) {
+        
+        this._validateParameters(arguments, ['String', '{name: String, path: String}'], 1, 2);
         
         var parameters;
         if(!scope){
-            parameters = [name];
+            parameters = [arguments[0]];
         }else{
-            parameters = [name, this._getFullScopePath(scope)];    
+            parameters = [arguments[0], this._getFullScopePath(arguments[1])];    
         }
         
         var method = "getBroadcastStream";
@@ -800,13 +818,14 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Get all broadcast streams in a scope
     */
-    getBroadcastStreamNames(scope) {
+    getBroadcastStreamNames(scope=undefined) {
         
         var parameters;
         if(!scope){
             parameters = [];
         }else{
-            parameters = [this._getFullScopePath(scope)];    
+            this._validateParameters(arguments, ['{name: String, path: String}'], 1, 1);
+            parameters = [this._getFullScopePath(arguments[0])];    
         }
         var method = "getBroadcastStreamNames";
         var request = this._createAPIRequest(method, parameters);
@@ -819,9 +838,12 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Record a stream
     */
-    recordStart(name, scope, saveAs, overWrite) {
+    recordStart(name, scope=undefined, saveAs=name, overWrite=true) {
+        
+        this._validateParameters(arguments, ['String', '{name: String, path: String}', 'String', 'Boolean'], 4, 4);
+        
+        var parameters = [arguments[0], arguments[1], arguments[2], arguments[3]];
         var method = "recordStart";
-        var parameters = [name, this._getFullScopePath(scope), saveAs, overWrite];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -833,9 +855,18 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Stop Record of a stream
     */
-    recordStop(name, scope) {
-        var method = "recordStop";
-        var parameters = [name, this._getFullScopePath(scope)];
+    recordStop(name, scope=undefined) {
+        
+        var parameters;
+        if(!scope){
+            this._validateParameters(arguments, ['String'], 1, 1);
+            parameters = [arguments[0]];
+        }else{
+            this._validateParameters(arguments, ['String', '{name: String, path: String}'], 2, 2);
+            parameters = [arguments[0], this._getFullScopePath(arguments[1])];    
+        }
+        
+        var method = "recordStop";        
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -846,9 +877,18 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Close stream
     */
-    closeStream(name, scope) {
+    closeStream(name, scope=undefined) {
+        
+        var parameters;
+        if(!scope){
+            this._validateParameters(arguments, ['String'], 1, 1);
+            parameters = [arguments[0]];
+        }else{
+            this._validateParameters(arguments, ['String', '{name: String, path: String}'], 2, 2);
+            parameters = [arguments[0], this._getFullScopePath(arguments[1])];    
+        }
+        
         var method = "closeStream";
-        var parameters = [name, this._getFullScopePath(scope)];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -859,9 +899,18 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Check if stream is recording
     */
-    isRecording(name, scope){
+    isRecording(name, scope=undefined){
+        
+        var parameters;
+        if(!scope){
+            this._validateParameters(arguments, ['String'], 1, 1);
+            parameters = [arguments[0]];
+        }else{
+            this._validateParameters(arguments, ['String', '{name: String, path: String}'], 2, 2);
+            parameters = [arguments[0], this._getFullScopePath(arguments[1])];    
+        }
+        
         var method = "isRecording";
-        var parameters = [name, this._getFullScopePath(scope)];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -870,11 +919,20 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     
     /*
-    * Check if stream is recording
+    * Get connection of stream
     */
-    getStreamConnection(name, scope){
+    getStreamConnection(name, scope=undefined){
+        
+        var parameters;
+        if(!scope){
+            this._validateParameters(arguments, ['String'], 1, 1);
+            parameters = [arguments[0]];
+        }else{
+            this._validateParameters(arguments, ['String', '{name: String, path: String}'], 2, 2);
+            parameters = [arguments[0], this._getFullScopePath(arguments[1])];    
+        }
+        
         var method = "getStreamConnection";
-        var parameters = [name, this._getFullScopePath(scope)];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -886,9 +944,18 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Get stream stats
     */
-    getStreamStatistics(name, scope){
+    getStreamStatistics(name, scope=undefined){
+        
+        var parameters;
+        if(!scope){
+            this._validateParameters(arguments, ['String'], 1, 1);
+            parameters = [arguments[0]];
+        }else{
+            this._validateParameters(arguments, ['String', '{name: String, path: String}'], 2, 2);
+            parameters = [arguments[0], this._getFullScopePath(arguments[1])];    
+        }
+        
         var method = "getStreamStatistics";
-        var parameters = [name, this._getFullScopePath(scope)];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -900,8 +967,10 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     * Get stream length
     */
     getStreamLength(name) {
+        
+        this._validateParameters(arguments, ['String'], 1, 1);
         var method = "getStreamLength";
-        var parameters = [name];
+        var parameters = [arguments[0]];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
     }
@@ -912,7 +981,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     /*
     * Validate parameters for overloaded function
     */
-    _validateOverload(params, allowedTypes, minParamCount, maxParamCount){
+    _validateParameters(params, allowedTypes, minParamCount, maxParamCount){
         
         if(params.length < minParamCount){
             throw new Error("Minimum of " + minParamCount + " parameters required.");
@@ -923,7 +992,15 @@ class Red5JsBridgedApplication extends Red5JsBridge {
             var p = params[i];
             var t = allowedTypes[i];
             
-             // Check if param is of type t
+            if(!t){
+                continue;
+            }
+            
+            if(t === 'Map'){
+                // DO SPECIAL Check later
+            }
+            
+             // Check if param is of type t => { String | Number | Boolean }
             if(!typeCheck(t, p)) {
                 throw new Error("Unexpected param type.");
             }
@@ -1365,9 +1442,9 @@ var bridge = new Red5JsBridgedApplication({debug: true}, {
 });
 
 
-bridge.on('bridge.ready', function(obj){
+bridge.on('bridge.ready', function(session){
     console.log("bridge is open");
-    console.log("Session Id " + obj.sessionId);
-    console.log("Application Scope " + JSON.stringify(obj.scope));
+    console.log("Session Id " + session.sessionId);
+    console.log("Application Scope " + JSON.stringify(session.scope));
 });
 bridge.connect();
