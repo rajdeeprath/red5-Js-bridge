@@ -1,10 +1,13 @@
-let Red5JsBridge = (function () {
+const red5Js = (function () {
     
 const defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
 
 const EventEmitter = require('events');  
 const Promise = require('promise');
 const typeCheck = require('type-check').typeCheck;
+
+   
+    
     
 class Red5JsBridge extends EventEmitter {
      
@@ -519,13 +522,8 @@ class Red5JsBridge extends EventEmitter {
 }
     
     
-    return Red5JsBridge;
-                    
-})();
-
-
-
-
+    
+    
 class Red5JsBridgedApplication extends Red5JsBridge {
 
     constructor(opts, handler) {
@@ -1302,6 +1300,22 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     }
 
 }
+    
+    
+    /* Module Export Object */
+    
+    const Red5JsModules = {
+        Red5JsBridge : Red5JsBridge,
+        Red5JsBridgedApplication : Red5JsBridgedApplication
+    }; 
+    
+    return Red5JsModules;
+                    
+})();
+
+
+
+
 
 
 
@@ -1309,7 +1323,7 @@ class Red5JsBridgedApplication extends Red5JsBridge {
 
 
 /*
-var bridge = new Red5JsBridge({debug: false});
+var bridge = new red5Js.Red5JsBridge({debug: false});
 bridge.on('bridge.ready', function(id){
     console.log("bridge - ready " + id);
     
@@ -1323,9 +1337,11 @@ bridge.on('bridge.ready', function(id){
 });
 bridge.connect();
 */
-    
+
+
+/*
 var roomscope;    
-var bridge = new Red5JsBridgedApplication({debug: true}, {
+var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
     
     "appStart" : function(scope) {
         console.log("appStart");
@@ -1448,3 +1464,4 @@ bridge.on('bridge.ready', function(session){
     console.log("Application Scope " + JSON.stringify(session.scope));
 });
 bridge.connect();
+*/
