@@ -12,6 +12,7 @@ var version = require(pkg).version;
 var PROD = (process.env.NODE_ENV === 'production');
 var sourceDirectory = path.join(__dirname, 'src');
 var buildDirectory = path.join(__dirname, PROD ? 'dist' : 'build', 'red5-js-bridge-' + version);
+var libraryBuildirectory = path.join(buildDirectory, 'lib');
 
 var defaultOptions = {
   
@@ -23,7 +24,7 @@ mkdir.sync(buildDirectory);
 gulp.task('babelify', function (cb) {
     gulp.src('./src/client/red5js.js')
         .pipe(babel())
-        .pipe(gulp.dest(buildDirectory))
+        .pipe(gulp.dest(libraryBuildirectory))
         .on('end', cb);
 });
 
@@ -35,7 +36,7 @@ gulp.task('browserify-dependencies', function (cb) {
         .pipe(browserify({
           insertGlobals : true
         }))
-        .pipe(gulp.dest(buildDirectory))
+        .pipe(gulp.dest(libraryBuildirectory))
         .on('end', cb);
 });
 
@@ -44,7 +45,7 @@ gulp.task('browserify-dependencies', function (cb) {
 gulp.task('move-scripts', function (cb) {
 
   gulp.src(path.join(sourceDirectory, 'client', '**', '*.js'))
-    .pipe(gulp.dest(buildDirectory))
+    .pipe(gulp.dest(libraryBuildirectory))
     .on('end', cb);
 
 });
