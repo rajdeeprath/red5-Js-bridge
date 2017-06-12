@@ -31,6 +31,7 @@ import org.red5.server.api.stream.IStreamPlaybackSecurity;
 import org.red5.server.api.stream.IStreamPublishSecurity;
 import org.red5.server.api.stream.ResourceExistException;
 import org.red5.server.api.stream.ResourceNotFoundException;
+import org.red5.server.api.stream.StreamState;
 import org.red5.server.messaging.IPipeConnectionListener;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.stream.ClientBroadcastStream;
@@ -1124,7 +1125,7 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 		IBroadcastScope bs;
 		String name;
 		ClientBroadcastStream stream;
-		int numTries = 6000;
+		int numTries = 600;
 		
 		public BroadcastStreamChecker(IScope scope, String name){
 			this.scope = scope;
@@ -1174,12 +1175,24 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 				stream = (ClientBroadcastStream) appAdapter.getBroadcastStream(scope, name);
 				if(stream != null)
 				{
-					logger.debug("Registering change listener: {}", name); 
+					logger.debug("Registering change listener: {}", name);
 					stream.addStateChangeListener(streamChangeListener);
+					
+					if(stream.getState() == StreamState.PUBLISHING)
+					{
+						if(stream.getConnection() != null){
+							logger.info("Stream {} already active state: {}", name, stream.getState());
+							IConnection pubConnection  = Red5.getConnectionLocal();
+							if(pubConnection == null){
+								Red5.setConnectionLocal(stream.getConnection());
+								streamBroadcastStart(stream);
+							}
+						}
+					}
 				}
 				else
 				{
-					Thread.sleep(1);
+					Thread.sleep(10);
 					numTries --;
 					doCheck();
 				}
@@ -1210,7 +1223,7 @@ class SubscribeStreamChecker implements Runnable{
 		IBroadcastScope bs;
 		String name;
 		ClientBroadcastStream stream;
-		int numTries = 6000;
+		int numTries = 600;
 		
 		public SubscribeStreamChecker(IScope scope, String name){
 			this.scope = scope;
@@ -1262,7 +1275,7 @@ class SubscribeStreamChecker implements Runnable{
 				}
 				else
 				{
-					Thread.sleep(1);
+					Thread.sleep(10);
 					numTries --;
 					doCheck();
 				}
