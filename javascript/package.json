@@ -38,8 +38,12 @@
     "gulp-browserify": "^0.5.1",
     "gulp-concat": "latest",
     "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^3.0.0",
     "gulp-util": "latest",
     "promise": "^7.1.1",
     "type-check": "^0.3.2"
+  },
+  "dependencies": {
+    "websocket": "^1.0.24"
   }
 }

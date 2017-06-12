@@ -1,11 +1,11 @@
-const red5Js = (function () {
+const red5Js = (function (window) {
     
 const defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
 
 const EventEmitter = require('events');  
 const Promise = require('promise');
-const typeCheck = require('type-check').typeCheck;   
-    
+const typeCheck = require('type-check').typeCheck;  
+const W3CWebSocket = require('websocket').w3cwebsocket;
     
 class Red5JsBridge extends EventEmitter {
      
@@ -24,6 +24,14 @@ class Red5JsBridge extends EventEmitter {
             this._messageSweeper=undefined,
             this._messageSweepInterval=30000; 
             this._messageDecayTime=6000; 
+            
+            
+            if(window) {
+                this._supportsWebSockets = 'WebSocket' in window || 'MozWebSocket' in window;
+            }else {
+                this._supportsWebSockets = false;
+            }
+
             
             
             /* Copying defaults */
@@ -329,7 +337,17 @@ class Red5JsBridge extends EventEmitter {
                 {
                     if(!this._connected)
                     {
-                        this._ws = new WebSocket(Red5JsBridge.getConnectionURL(this.options), Red5JsBridge.getConnectionChannel(this.options));
+                        if(this._supportsWebSockets) 
+                        {
+                            // For good browser
+                            this._ws = new WebSocket(Red5JsBridge.getConnectionURL(this.options), Red5JsBridge.getConnectionChannel(this.options));
+                        }
+                        else
+                        {
+                            // For bad browser and nodejs
+                            this._ws = new W3CWebSocket(Red5JsBridge.getConnectionURL(this.options), Red5JsBridge.getConnectionChannel(this.options));
+                        }
+                        
                         
                         this._ws.onopen = function(evt){
                             
@@ -1371,14 +1389,15 @@ class Red5JsBridgedApplication extends Red5JsBridge {
     
     return Red5JsModules;
                     
-})();
+})(window);
 
 
 /* Exporting this module for others */
-module.exports = red5Js;
-
-
-
-
-
-
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') 
+{
+    module.exports = red5Js;
+}
+else 
+{
+    window.red5Js = red5Js;
+}
