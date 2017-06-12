@@ -1,8 +1,8 @@
 {
-  "name": "red5jsbridge",
+  "name": "red5js",
   "version": "0.0.1",
-  "description": "Red5 - Javascript bridge client library",
-  "main": "src/client/index.js",
+  "description": "Red5 - Javascript client library for nodejs and browser",
+  "main": "src/client/red5js.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean:build": "rm -rf build",

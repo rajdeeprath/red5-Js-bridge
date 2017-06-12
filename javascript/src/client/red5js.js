@@ -3,10 +3,7 @@ const red5Js = (function () {
 const defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
 
 const EventEmitter = require('events');  
-const Promise = require('promise');
-const typeCheck = require('type-check').typeCheck;
-
-   
+const typeCheck = require('type-check').typeCheck;   
     
     
 class Red5JsBridge extends EventEmitter {
@@ -22,7 +19,10 @@ class Red5JsBridge extends EventEmitter {
             this._connected = false, 
             this._ws = undefined,
             this._rmiPromises = {},
-            this._messageCounter = 0; 
+            this._messageCounter = 0,
+            this._messageSweeper=undefined,
+            this._messageSweepInterval=30000; 
+            this._messageDecayTime=6000; 
             
             
             /* Copying defaults */
@@ -179,6 +179,63 @@ class Red5JsBridge extends EventEmitter {
     
     
     
+        /*
+        * Clean message register
+        */
+        _cleanMessageRegister(){
+            
+            let now = new Date().getTime();
+            let obj = undefined;
+            let rmi_time = undefined;
+            let rmi_reject = undefined;
+            
+            for(var requestId in this._rmiPromises){
+                
+                /* Get the object */
+                obj = this._rmiPromises[requestId];
+                rmi_time = obj['time'];
+                rmi_reject = obj['reject'];
+                
+                
+                /* If RMI call is dead */
+                if(now - rmi_time > this._messageDecayTime){
+                    delete this._rmiPromises[requestId];
+                    
+                    if(rmi_reject){
+                        rmi_reject("rmi timeout for requestId " + requestId);
+                    }
+                }
+            }
+        }
+    
+    
+    
+    
+    
+        /*
+        * Start message sweeper
+        */
+        _startRMIIndexCleaner(){
+            this._stopRMIIndexCleaner();
+            this._rmiSweeper = setInterval(this._cleanMessageRegister, this._messageSweepInterval);
+        }
+    
+    
+    
+    
+        /*
+        * Stop message sweeper
+        */
+        _stopRMIIndexCleaner(){
+            if(this._messageSweeper){
+                clearInterval(this._messageSweeper);
+                _messageSweeper = undefined;
+            }
+        }
+    
+    
+    
+    
     
         /*
         * handle websocket messages
@@ -239,6 +296,7 @@ class Red5JsBridge extends EventEmitter {
         */
         _handleClose(data) {
             this._connected = false; 
+            this._stopRMIIndexCleaner();
             this.emit("bridge.close", {sessionId: this._sessionId, scope: this._appScope});
         }
     
@@ -250,6 +308,7 @@ class Red5JsBridge extends EventEmitter {
         */
         _handleConnect(evt){
             this._connected = true; 
+            this._startRMIIndexCleaner();
         }    
     
     
@@ -1314,154 +1373,11 @@ class Red5JsBridgedApplication extends Red5JsBridge {
 })();
 
 
+/* Exporting this module for others */
+module.exports = red5Js;
 
 
 
 
 
 
-
-
-/*
-var bridge = new red5Js.Red5JsBridge({debug: false});
-bridge.on('bridge.ready', function(id){
-    console.log("bridge - ready " + id);
-    
-    bridge.invoke('greet', "rajdeep")
-    .then(function(result){
-      console.log("result =>" + result);  
-    })
-    .catch(function(error){
-      console.log("error =>" + error);  
-    })
-});
-bridge.connect();
-*/
-
-
-/*
-var roomscope;    
-var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
-    
-    "appStart" : function(scope) {
-        console.log("appStart");
-    },                                          
-                                          
-    "appConnect" : function(connection, params) {
-        console.log("appConnect");
-        
-        bridge.addAtrribute(connection, "time", new Date().getTime())
-        .then(function(result){
-            console.log("result " + JSON.stringify(result));
-            
-            bridge.getAtrributes(connection)
-            .then(function(result){
-                console.log("result " + JSON.stringify(result));
-                return result;
-                
-            })
-            .then(function(result){
-                
-                let map = new Map();
-                map.set("name", "rajdeep");
-                map.set("count", 1);
-                
-                bridge.addAtrributes(connection, map).then(function(result){
-                     console.log("success");
-                })
-                .catch(function(err){
-                     console.log("err");
-                });
-            })
-            .catch(function(err){
-                console.log("err");
-            });
-        })
-        .catch(function(err){
-            console.log("err");
-        });
-    },                                        
-                                          
-    "appJoin" : function(connection, scope) {
-        console.log("appJoin");
-    },
-                                          
-    "roomConnect" : function(connection, params) {
-        console.log("roomConnect");
-    },                                        
-                                          
-    "roomJoin" : function(connection, scope) {
-        roomscope = scope;
-        console.log("roomJoin");
-    },
-
-    "roomLeave" : function(connection, scope) {
-        console.log("roomLeave");
-    },  
-    
-    "roomStop" : function(scope) {
-        console.log("roomStop");
-    },
-                                          
-    "roomDisconnect" : function(connection) {
-        console.log("roomDisconnect");
-    },
-    
-    "appDisconnect" : function(connection) {
-        console.log("appDisconnect");
-    },
-    
-    "appStop" : function(scope) {
-        console.log("appStop");
-    },
-    
-    "streamBroadcastStart" : function(connection, stream) {
-        console.log("streamBroadcastStart");
-        
-        bridge.getScope(stream.scopePath).then(function(scope){
-            
-            console.log("stream scope  " + JSON.stringify(scope));
-            bridge.recordStart(stream.publishedName, scope, "test", false).then(function(result){
-                console.log("recordStart done " + JSON.stringify(result));
-                return result;
-            })
-            .then(bridge.delayPromise(10000)).then(function(result){
-                   bridge.recordStop(stream.publishedName, scope).then(function(res){
-                        console.log("recordStop done " + JSON.stringify(result));                
-                   })                                
-                   .catch(function(err){
-                        console.log("error " + err);
-                   });                                                   
-            })
-            .catch(function(error){
-                console.log("error " + err);
-            });  
-        })
-        .catch(function(err){
-            
-            console.log("error " + err);
-        });
-    },
-    
-    "streamBroadcastClose" : function(connection, stream) {
-        console.log("streamBroadcastClose");
-    },
-    
-    "streamSubscriberStart" : function(connection, stream) {
-        console.log("streamSubscriberStart");
-    },
-    
-    "streamSubscriberClose" : function(connection, stream) {
-         console.log("streamSubscriberClose");
-    }
-                                          
-});
-
-
-bridge.on('bridge.ready', function(session){
-    console.log("bridge is open");
-    console.log("Session Id " + session.sessionId);
-    console.log("Application Scope " + JSON.stringify(session.scope));
-});
-bridge.connect();
-*/

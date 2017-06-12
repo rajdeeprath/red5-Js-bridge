@@ -1,0 +1,143 @@
+/*
+var bridge = new red5Js.Red5JsBridge({debug: false});
+bridge.on('bridge.ready', function(id){
+    console.log("bridge - ready " + id);
+    
+    bridge.invoke('greet', "rajdeep")
+    .then(function(result){
+      console.log("result =>" + result);  
+    })
+    .catch(function(error){
+      console.log("error =>" + error);  
+    })
+});
+bridge.connect();
+*/
+
+
+/*
+var roomscope;    
+var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
+    
+    "appStart" : function(scope) {
+        console.log("appStart");
+    },                                          
+                                          
+    "appConnect" : function(connection, params) {
+        console.log("appConnect");
+        
+        bridge.addAtrribute(connection, "time", new Date().getTime())
+        .then(function(result){
+            console.log("result " + JSON.stringify(result));
+            
+            bridge.getAtrributes(connection)
+            .then(function(result){
+                console.log("result " + JSON.stringify(result));
+                return result;
+                
+            })
+            .then(function(result){
+                
+                let map = new Map();
+                map.set("name", "rajdeep");
+                map.set("count", 1);
+                
+                bridge.addAtrributes(connection, map).then(function(result){
+                     console.log("success");
+                })
+                .catch(function(err){
+                     console.log("err");
+                });
+            })
+            .catch(function(err){
+                console.log("err");
+            });
+        })
+        .catch(function(err){
+            console.log("err");
+        });
+    },                                        
+                                          
+    "appJoin" : function(connection, scope) {
+        console.log("appJoin");
+    },
+                                          
+    "roomConnect" : function(connection, params) {
+        console.log("roomConnect");
+    },                                        
+                                          
+    "roomJoin" : function(connection, scope) {
+        roomscope = scope;
+        console.log("roomJoin");
+    },
+
+    "roomLeave" : function(connection, scope) {
+        console.log("roomLeave");
+    },  
+    
+    "roomStop" : function(scope) {
+        console.log("roomStop");
+    },
+                                          
+    "roomDisconnect" : function(connection) {
+        console.log("roomDisconnect");
+    },
+    
+    "appDisconnect" : function(connection) {
+        console.log("appDisconnect");
+    },
+    
+    "appStop" : function(scope) {
+        console.log("appStop");
+    },
+    
+    "streamBroadcastStart" : function(connection, stream) {
+        console.log("streamBroadcastStart");
+        
+        bridge.getScope(stream.scopePath).then(function(scope){
+            
+            console.log("stream scope  " + JSON.stringify(scope));
+            bridge.recordStart(stream.publishedName, scope, "test", false).then(function(result){
+                console.log("recordStart done " + JSON.stringify(result));
+                return result;
+            })
+            .then(bridge.delayPromise(10000)).then(function(result){
+                   bridge.recordStop(stream.publishedName, scope).then(function(res){
+                        console.log("recordStop done " + JSON.stringify(result));                
+                   })                                
+                   .catch(function(err){
+                        console.log("error " + err);
+                   });                                                   
+            })
+            .catch(function(error){
+                console.log("error " + err);
+            });  
+        })
+        .catch(function(err){
+            
+            console.log("error " + err);
+        });
+    },
+    
+    "streamBroadcastClose" : function(connection, stream) {
+        console.log("streamBroadcastClose");
+    },
+    
+    "streamSubscriberStart" : function(connection, stream) {
+        console.log("streamSubscriberStart");
+    },
+    
+    "streamSubscriberClose" : function(connection, stream) {
+         console.log("streamSubscriberClose");
+    }
+                                          
+});
+
+
+bridge.on('bridge.ready', function(session){
+    console.log("bridge is open");
+    console.log("Session Id " + session.sessionId);
+    console.log("Application Scope " + JSON.stringify(session.scope));
+});
+bridge.connect();
+*/

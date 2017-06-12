@@ -21,7 +21,7 @@ mkdir.sync(buildDirectory);
 
 
 gulp.task('babelify', function (cb) {
-    gulp.src('./src/client/index.js')
+    gulp.src('./src/client/red5js.js')
         .pipe(babel())
         .pipe(gulp.dest(buildDirectory))
         .on('end', cb);
@@ -30,7 +30,7 @@ gulp.task('babelify', function (cb) {
 
 gulp.task('browserify-dependencies', function (cb) {
  
-    gulp.src('./src/client/index.js')
+    gulp.src('./src/client/red5js.js')
         .pipe(babel())
         .pipe(browserify({
           insertGlobals : true
