@@ -1185,8 +1185,9 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 							IConnection pubConnection  = Red5.getConnectionLocal();
 							if(pubConnection == null){
 								Red5.setConnectionLocal(stream.getConnection());
-								streamBroadcastStart(stream);
 							}
+							
+							streamBroadcastStart(stream);
 						}
 					}
 				}
