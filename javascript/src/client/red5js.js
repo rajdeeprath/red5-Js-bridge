@@ -3,6 +3,7 @@ const red5Js = (function () {
 const defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
 
 const EventEmitter = require('events');  
+const Promise = require('promise');
 const typeCheck = require('type-check').typeCheck;   
     
     
