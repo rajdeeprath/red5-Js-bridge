@@ -1,6 +1,6 @@
 const red5Js = (function (window) {
     
-const defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
+const defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000, connectionParams : {}};
 
 const EventEmitter = require('events');  
 const typeCheck = require('type-check').typeCheck;  
@@ -77,7 +77,7 @@ class Red5JsBridge extends EventEmitter {
             
             /* Initialize socket connection */
             if(this.options.autoConnect === true) {
-                connect();
+                setTimeout(connect, 2000);
             }
         }
     
@@ -641,6 +641,10 @@ class Red5JsBridgedApplication extends Red5JsBridge {
         super(opts);
 
         this._appHandler = undefined;
+        
+        if(this._options.connectionParams) {
+            this._options.connectionParams['adapterClient'] = true;
+        }
 
         if(handler){
             this._appHandler = handler;
