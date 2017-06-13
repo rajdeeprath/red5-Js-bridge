@@ -1,7 +1,7 @@
-var red5Js = require('./red5Js.js');
+(function (window) {
 
-
-var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
+	var Red5JsBridgedApplication = Red5Js.Red5JsBridgedApplication;
+    var bridge = new Red5JsBridgedApplication({debug: true}, {
     
     "appStart" : function(scope) {
         console.log("appStart");
@@ -20,6 +20,7 @@ var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
     },                                        
                                           
     "roomJoin" : function(connection, scope) {
+        roomscope = scope;
         console.log("roomJoin");
     },
 
@@ -63,9 +64,9 @@ var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
 
 
 bridge.on('bridge.ready', function(session){
-    console.log("bridge is open");
-    console.log("Session Id " + session.sessionId);
-    console.log("Application Scope " + JSON.stringify(session.scope));
+    console.log("bridge is connected " + JSON.stringify(session));
 });
-
+    
 bridge.connect();
+                    
+})(window);

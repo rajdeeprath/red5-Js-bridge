@@ -3,7 +3,6 @@ const red5Js = (function (window) {
 const defaults = {port: 8081, protocol: "ws", host: "localhost", app: "wsendpoint", channel: "jsbridge", autoConnect: false, debug: true, rmiTimeout: 5000};
 
 const EventEmitter = require('events');  
-const Promise = require('promise');
 const typeCheck = require('type-check').typeCheck;  
 const W3CWebSocket = require('websocket').w3cwebsocket;
     
@@ -301,6 +300,17 @@ class Red5JsBridge extends EventEmitter {
     
     
         /*
+        * handle websocket error
+        */
+        _handleError(err) {
+            this.emit("bridge.error", err);
+        }
+    
+    
+    
+    
+    
+        /*
         * handle websocket messages
         */
         _handleClose(data) {
@@ -371,7 +381,9 @@ class Red5JsBridge extends EventEmitter {
                             
                             if(that.options.debug) {
                                 console.log("onerror " + err);
-                            }                            
+                            }  
+                            
+                            that._handleError(err);
                         };
                         this._ws.onclose = function(evt){
                             
@@ -1393,11 +1405,4 @@ class Red5JsBridgedApplication extends Red5JsBridge {
 
 
 /* Exporting this module for others */
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') 
-{
-    module.exports = red5Js;
-}
-else 
-{
-    window.red5Js = red5Js;
-}
+module.exports = red5Js;

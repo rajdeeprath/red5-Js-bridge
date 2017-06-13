@@ -11,7 +11,7 @@ var version = require(pkg).version;
 
 var PROD = (process.env.NODE_ENV === 'production');
 var sourceDirectory = path.join(__dirname, 'src');
-var buildDirectory = path.join(__dirname, PROD ? 'dist' : 'build', 'red5-js-bridge-' + version);
+var buildDirectory = path.join(__dirname, PROD ? 'dist' : 'build', 'red5js-' + version);
 var libraryBuildirectory = path.join(buildDirectory, 'lib');
 var npmBuildirectory = path.join(buildDirectory, 'bin');
 
@@ -25,7 +25,7 @@ mkdir.sync(npmBuildirectory);
 
 
 gulp.task('babelify', function (cb) {
-    gulp.src('./src/client/*.js')
+    gulp.src('./src/client/red5js.js')
         .pipe(babel())
         .pipe(gulp.dest(libraryBuildirectory))
         .on('end', cb);
@@ -33,17 +33,15 @@ gulp.task('babelify', function (cb) {
 
 
 gulp.task('babelify-npm', function (cb) {
-    gulp.src('./src/client/*.js')
+    gulp.src('./src/client/red5js.js')
         .pipe(babel())
         .pipe(gulp.dest(npmBuildirectory))
         .on('end', cb);
 });
 
 
-gulp.task('browserify-dependencies', function (cb) {
- 
-    gulp.src('./src/client/*.js')
-        .pipe(babel())
+gulp.task('browserify-dependencies', function (cb) {    
+    gulp.src('./src/client/red5js.js')
         .pipe(browserify({
           insertGlobals : true
         }))
@@ -54,7 +52,6 @@ gulp.task('browserify-dependencies', function (cb) {
 
 
 gulp.task('move-scripts', function (cb) {
-
   gulp.src(path.join(sourceDirectory, 'client', '**', '*.js'))
     .pipe(gulp.dest(libraryBuildirectory))
     .on('end', cb);
@@ -62,7 +59,15 @@ gulp.task('move-scripts', function (cb) {
 });
 
 
-gulp.task('build', ['babelify', 'browserify-dependencies', 'move-scripts'], function (cb) {
+gulp.task('move-examples', function (cb) {
+  gulp.src(path.join(sourceDirectory, 'client', '**', 'examples', '*'))
+    .pipe(gulp.dest(buildDirectory))
+    .on('end', cb);
+
+});
+
+
+gulp.task('build', ['babelify', 'browserify-dependencies', 'move-scripts', 'move-examples'], function (cb) {
   cb();
 });
 

@@ -1,23 +1,7 @@
-/*
-var bridge = new red5Js.Red5JsBridge({debug: false});
-bridge.on('bridge.ready', function(id){
-    console.log("bridge - ready " + id);
-    
-    bridge.invoke('greet', "rajdeep")
-    .then(function(result){
-      console.log("result =>" + result);  
-    })
-    .catch(function(error){
-      console.log("error =>" + error);  
-    })
-});
-bridge.connect();
-*/
+(function (window) {
 
-
-/*
-var roomscope;    
-var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
+	var Red5JsBridgedApplication = Red5Js.Red5JsBridgedApplication;
+    var bridge = new Red5JsBridgedApplication({debug: true}, {
     
     "appStart" : function(scope) {
         console.log("appStart");
@@ -30,32 +14,53 @@ var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
         .then(function(result){
             console.log("result " + JSON.stringify(result));
             
-            bridge.getAtrributes(connection)
-            .then(function(result){
-                console.log("result " + JSON.stringify(result));
-                return result;
+            bridge.getAtrributes(connection).then(function(result) {
                 
-            })
-            .then(function(result){
+                console.log("result " + JSON.stringify(result));
+                return result;  
+                
+            }).then(function(result) {
                 
                 let map = new Map();
                 map.set("name", "rajdeep");
-                map.set("count", 1);
+                map.set("active", true);
                 
                 bridge.addAtrributes(connection, map).then(function(result){
-                     console.log("success");
-                })
-                .catch(function(err){
-                     console.log("err");
+                     
+                    console.log("success");
+                    return result;
+                    
+                }).then(function(result){
+                     
+                    disconnect(connection).then(function(res){
+                        
+                        console.log("success");
+                        
+                    }).catch(function(err){
+                     
+                        console.error("err " + err);
+                    
+                    });
+                    
+                }).catch(function(err){
+                     
+                    console.error("err " + err);
+                    
                 });
+                
             })
             .catch(function(err){
-                console.log("err");
+                
+                console.error("err " + err);
+                
             });
         })
         .catch(function(err){
-            console.log("err");
+            
+             console.error("err " + err);
+            
         });
+        
     },                                        
                                           
     "appJoin" : function(connection, scope) {
@@ -93,30 +98,6 @@ var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
     
     "streamBroadcastStart" : function(connection, stream) {
         console.log("streamBroadcastStart");
-        
-        bridge.getScope(stream.scopePath).then(function(scope){
-            
-            console.log("stream scope  " + JSON.stringify(scope));
-            bridge.recordStart(stream.publishedName, scope, "test", false).then(function(result){
-                console.log("recordStart done " + JSON.stringify(result));
-                return result;
-            })
-            .then(bridge.delayPromise(10000)).then(function(result){
-                   bridge.recordStop(stream.publishedName, scope).then(function(res){
-                        console.log("recordStop done " + JSON.stringify(result));                
-                   })                                
-                   .catch(function(err){
-                        console.log("error " + err);
-                   });                                                   
-            })
-            .catch(function(error){
-                console.log("error " + err);
-            });  
-        })
-        .catch(function(err){
-            
-            console.log("error " + err);
-        });
     },
     
     "streamBroadcastClose" : function(connection, stream) {
@@ -134,10 +115,12 @@ var bridge = new red5Js.Red5JsBridgedApplication({debug: true}, {
 });
 
 
-bridge.on('bridge.ready', function(session){
-    console.log("bridge is open");
-    console.log("Session Id " + session.sessionId);
-    console.log("Application Scope " + JSON.stringify(session.scope));
+bridge.on('bridge.ready', function(session) {
+    
+    console.log("bridge is connected " + JSON.stringify(session));
+    
 });
+    
 bridge.connect();
-*/
+                    
+})(window);
