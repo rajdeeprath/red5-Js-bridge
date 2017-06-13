@@ -31,7 +31,7 @@ public class JsBridgeConnection {
 	
 	private String sessionId;
 	
-	private boolean isSubscribedToApplicationEvents;
+	private Map<String, Object> queryParams;
 	
 	
 	
@@ -170,13 +170,21 @@ public class JsBridgeConnection {
 	}
 
 
-	public boolean isSubscribedToApplicationEvents() {
-		return isSubscribedToApplicationEvents;
+	public Map<String, Object> getQueryParams() {
+		return queryParams;
 	}
 
 
-	public void setSubscribedToApplicationEvents(
-			boolean isSubscribedToApplicationEvents) {
-		this.isSubscribedToApplicationEvents = isSubscribedToApplicationEvents;
+	public void setQueryParams(Map<String, Object> queryParams) {
+		this.queryParams = queryParams;
+	}
+
+
+	public boolean isApplicationAdapterConsumer(){
+		if(queryParams.containsKey("adapterClient")){
+			return (Boolean) queryParams.get("adapterClient");
+		}
+		
+		return false;
 	}
 }

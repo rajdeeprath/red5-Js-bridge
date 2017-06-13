@@ -44,6 +44,7 @@ public class ConnectionManager {
 		JsBridgeConnection connection = new JsBridgeConnection();
 		connection.setSignalChannel(conn);
 		connection.setHost(conn.getHost());
+		connection.setQueryParams(conn.getQuerystringParameters());
 		
 		InetSocketAddress addr = (InetSocketAddress) conn.getSession().getRemoteAddress();
 		connection.setRemoteAddress(addr.getAddress().getHostAddress());
@@ -104,31 +105,6 @@ public class ConnectionManager {
 	    {
 	    	JsBridgeConnection conn = iterator.next();
 	    	if(conn != null && conn.isConnected())
-	    	{
-	    		try 
-	    		{
-					conn.send(message);
-				} 
-	    		catch (Exception e) 
-	    		{
-					e.printStackTrace();
-				}
-	    	}
-	    }
-	}
-	
-	
-	
-	
-	
-	
-	public void sendApplicationEvents(IMessage message)
-	{
-		Iterator<JsBridgeConnection> iterator = connections.iterator();
-		while (iterator.hasNext())
-	    {
-	    	JsBridgeConnection conn = iterator.next();
-	    	if(conn != null && conn.isConnected() && conn.isSubscribedToApplicationEvents())
 	    	{
 	    		try 
 	    		{

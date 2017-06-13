@@ -541,6 +541,13 @@ public class MultiThreadedApplicationAdapterDelegate implements IApplication, IS
 	
 	
 	
+	public Scope getConnectionScope(String sessionId) throws Exception {
+		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);
+		return Red5JsBridgeUtilities.toScope(connection.getScope());
+	}
+	
+	
+	
 	
 	public ConnectionStatistics getConnectionStatistics(String sessionId) throws Exception {
 		IConnection connection = Red5JsBridgeUtilities.getConnectionById(appAdapter, sessionId);

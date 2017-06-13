@@ -101,7 +101,28 @@ class Red5JsBridge extends EventEmitter {
     */
     
     static getConnectionURL(opts) {
-        return opts.protocol +"://" + opts.host + ":" + opts.port + "/" + opts.app;
+        
+        var queryParams = '';
+        if(opts.connectionParams) {
+            queryParams = Red5JsBridge.serialize(opts.connectionParams);
+        }
+        
+        return opts.protocol +"://" + opts.host + ":" + opts.port + "/" + opts.app + "?" + queryParams;
+    }
+    
+    
+    
+    
+    /*
+    * Object to query string
+    */
+    static serialize(obj) {
+      var str = [];
+      for(var p in obj)
+        if (obj.hasOwnProperty(p)) {
+          str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+        }
+      return str.join("&");
     }
     
     
@@ -683,12 +704,26 @@ class Red5JsBridgedApplication extends Red5JsBridge {
         var parameters = [];
         var request = this._createAPIRequest(method, parameters);
         return this._send(request);
-    }    
+    }
     
     
     
     
-     /*
+    /*
+    * Get scope of the connection
+    */
+    getConnectionScope(sessionId) {
+        this._validateParameters(arguments, ['String'], 1, 1);
+        var parameters = [arguments[0]];
+        var method = "getConnectionScope";        
+        var request = this._createAPIRequest(method, parameters);
+        return this._send(request);
+    }
+    
+    
+    
+    
+    /*
     * Get connection by sessionId
     */
     getConnection(sessionId) {
