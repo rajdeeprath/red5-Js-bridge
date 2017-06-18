@@ -20,7 +20,7 @@
         <timestamp>${maven.build.timestamp}</timestamp>
         <cauldron.version>2.1.2</cauldron.version>
         <red5.version>1.0.9-M10</red5.version>
-        <red5-websocket.version>1.9</red5-websocket.version>
+        <websocket.version>1.10</websocket.version>
         <mina.version>2.0.16</mina.version>
         <spring.version>4.3.2.RELEASE</spring.version>
         <tomcat.version>8.5.11</tomcat.version>
@@ -140,6 +140,27 @@
             <artifactId>mina-core</artifactId>
             <groupId>org.apache.mina</groupId>
             <version>${mina.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.red5</groupId>
+            <artifactId>websocket</artifactId>
+            <version>${websocket.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.mina</groupId>
+                    <artifactId>mina-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.mina</groupId>
+                    <artifactId>mina-integration-beans</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.mina</groupId>
+                    <artifactId>mina-integration-jmx</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>
